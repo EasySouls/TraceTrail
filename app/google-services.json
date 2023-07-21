@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "845015104104",
+    "project_id": "tracetrail",
+    "storage_bucket": "tracetrail.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:845015104104:android:31b8cf1b48ded101e459dd",
+        "android_client_info": {
+          "package_name": "dev.easysouls.tracetrail"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "845015104104-gilr5ltcn8mjsma7uqjn4ld4rm94c0vu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "dev.easysouls.tracetrail",
+            "certificate_hash": "b5f73760580b552740b63be420188c8432756d22"
+          }
+        },
+        {
+          "client_id": "845015104104-1it43pt8jmgq2bl9390vgp78jnjocncn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBuM2RKxOiLFKWUoI4AhWrCEZfbA5ZM34"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "845015104104-1it43pt8jmgq2bl9390vgp78jnjocncn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
