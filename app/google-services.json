@@ -7,22 +7,22 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:845015104104:android:31b8cf1b48ded101e459dd",
+        "mobilesdk_app_id": "1:845015104104:android:17aac142e332232fe459dd",
         "android_client_info": {
           "package_name": "dev.easysouls.tracetrail"
         }
       },
       "oauth_client": [
         {
-          "client_id": "845015104104-gilr5ltcn8mjsma7uqjn4ld4rm94c0vu.apps.googleusercontent.com",
+          "client_id": "845015104104-fef07dlcrvr6rlo3eginr4c6cpfbun3i.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "dev.easysouls.tracetrail",
-            "certificate_hash": "b5f73760580b552740b63be420188c8432756d22"
+            "certificate_hash": "bdf53760580b552740b63be420188c8432756d22"
           }
         },
         {
-          "client_id": "845015104104-1it43pt8jmgq2bl9390vgp78jnjocncn.apps.googleusercontent.com",
+          "client_id": "845015104104-s6svtjmecn61m13qh2bv5o4fqclua750.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
