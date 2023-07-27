@@ -7,20 +7,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import dev.easysouls.tracetrail.presentation.navigation.NavigationBar
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -132,35 +122,26 @@ class MainActivity : ComponentActivity() {
                         route = "main"
                     ) {
                         composable("profile") {
-                            Scaffold(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black),
-                                topBar = {
-                                    NavigationBar()
-                                }
-                            ) {paddingValues ->
-                                print(paddingValues)
 
-                                ProfileScreen(
-                                    userData = googleAuthUiClient.getSignedInUser()
-                                ) {
-                                    lifecycleScope.launch {
-                                        googleAuthUiClient.signOut()
-                                        Toast.makeText(
-                                            applicationContext,
-                                            "Signed Out",
-                                            Toast.LENGTH_LONG
-                                        ).show()
+                            ProfileScreen(
+                                userData = googleAuthUiClient.getSignedInUser()
+                            ) {
+                                lifecycleScope.launch {
+                                    googleAuthUiClient.signOut()
+                                    Toast.makeText(
+                                        applicationContext,
+                                        "Signed Out",
+                                        Toast.LENGTH_LONG
+                                    ).show()
 
-                                        navController.navigate("auth") {
-                                            popUpTo("main") {
-                                                inclusive = true
-                                            }
+                                    navController.navigate("auth") {
+                                        popUpTo("main") {
+                                            inclusive = true
                                         }
                                     }
                                 }
                             }
+
                         }
                     }
                 }

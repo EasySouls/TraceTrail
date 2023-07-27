@@ -76,13 +76,14 @@ class GoogleAuthUiClient(
         )
     }
 
+    // TODO: If there is no logged on Google Account on the phone, it throws an api exception
     private fun buildSignInRequest(): BeginSignInRequest {
         return BeginSignInRequest.Builder()
             .setGoogleIdTokenRequestOptions(
                 GoogleIdTokenRequestOptions.builder()
                     .setSupported(true)
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(context.getString(R.string.web_client_id))
+                    .setServerClientId(context.resources.getString(R.string.web_client_id))
                     .build()
             )
             .setAutoSelectEnabled(true)

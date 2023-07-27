@@ -7,28 +7,28 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:845015104104:android:17aac142e332232fe459dd",
+        "mobilesdk_app_id": "1:845015104104:android:fb44dff1ef0dcfc4e459dd",
         "android_client_info": {
           "package_name": "dev.easysouls.tracetrail"
         }
       },
       "oauth_client": [
         {
-          "client_id": "845015104104-fef07dlcrvr6rlo3eginr4c6cpfbun3i.apps.googleusercontent.com",
+          "client_id": "845015104104-6ll5tun0r1tpurtegqa8gjif8d674iel.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "dev.easysouls.tracetrail",
-            "certificate_hash": "bdf53760580b552740b63be420188c8432756d22"
+            "certificate_hash": "79abafebc10e32dd7c445d4423b889cd173ccb47"
           }
         },
         {
-          "client_id": "845015104104-s6svtjmecn61m13qh2bv5o4fqclua750.apps.googleusercontent.com",
+          "client_id": "845015104104-quut5kri7sgtpbolo5j8uu2n6b5d3c24.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCBuM2RKxOiLFKWUoI4AhWrCEZfbA5ZM34"
+          "current_key": "AIzaSyAD1iiuGxK0YCWW5Dl_h2sIDmnaSmdz8Tk"
         }
       ],
       "services": {

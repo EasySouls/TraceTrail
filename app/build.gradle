@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace 'dev.easysouls.tracetrail'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId "dev.easysouls.tracetrail"
         minSdk 26
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
