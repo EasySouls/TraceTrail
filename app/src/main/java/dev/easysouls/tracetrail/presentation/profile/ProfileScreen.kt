@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,18 +23,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import dev.easysouls.tracetrail.presentation.navigation.NavigationBar
 import dev.easysouls.tracetrail.presentation.sign_in.UserData
-import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
 
 @Composable
 fun ProfileScreen(
     userData: UserData?,
-    onSignOut: () -> Unit
+    onSignOut: () -> Unit,
+    onNavigateToFinderUI: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -73,6 +69,9 @@ fun ProfileScreen(
             }
             Button(onClick = onSignOut) {
                 Text(text = "Sign Out")
+            }
+            Button(onClick = onNavigateToFinderUI) {
+                Text(text = "To missing persons page")
             }
 
         }

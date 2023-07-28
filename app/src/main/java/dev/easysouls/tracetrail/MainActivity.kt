@@ -26,6 +26,7 @@ import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
 import dev.easysouls.tracetrail.presentation.sign_in.AuthViewModel
 import dev.easysouls.tracetrail.presentation.sign_in.GoogleAuthUiClient
 import dev.easysouls.tracetrail.presentation.sign_in.SignInScreen
+import dev.easysouls.tracetrail.ui.finder.FinderUI
 import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
 import kotlinx.coroutines.launch
 
@@ -124,24 +125,31 @@ class MainActivity : ComponentActivity() {
                         composable("profile") {
 
                             ProfileScreen(
-                                userData = googleAuthUiClient.getSignedInUser()
-                            ) {
-                                lifecycleScope.launch {
-                                    googleAuthUiClient.signOut()
-                                    Toast.makeText(
-                                        applicationContext,
-                                        "Signed Out",
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                                userData = googleAuthUiClient.getSignedInUser(),
+                                onSignOut = {
+                                    lifecycleScope.launch {
+                                        googleAuthUiClient.signOut()
+                                        Toast.makeText(
+                                            applicationContext,
+                                            "Signed Out",
+                                            Toast.LENGTH_LONG
+                                        ).show()
 
-                                    navController.navigate("auth") {
-                                        popUpTo("main") {
-                                            inclusive = true
+                                        navController.navigate("auth") {
+                                            popUpTo("main") {
+                                                inclusive = true
+                                            }
                                         }
                                     }
+                                },
+                                onNavigateToFinderUI = {
+                                    navController.navigate("missing_persons")
                                 }
-                            }
+                            )
+                        }
 
+                        composable("missing_persons") {
+                            FinderUI()
                         }
                     }
                 }

@@ -82,10 +82,12 @@ class GoogleAuthUiClient(
             .setGoogleIdTokenRequestOptions(
                 GoogleIdTokenRequestOptions.builder()
                     .setSupported(true)
+                    // Only show accounts previously used to sign in.
                     .setFilterByAuthorizedAccounts(false)
                     .setServerClientId(context.resources.getString(R.string.web_client_id))
                     .build()
             )
+            // Automatically sign in when exactly one credential is retrieved.
             .setAutoSelectEnabled(true)
             .build()
     }
