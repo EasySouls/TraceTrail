@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">TraceTrail</string>
     <string name="web_client_id">845015104104-quut5kri7sgtpbolo5j8uu2n6b5d3c24.apps.googleusercontent.com</string>
+    <string name="validation_blank_email_error">The email can\'t be blank</string>
+    <string name="validation_email_error">That\'s not a valid email</string>
+    <string name="validation_few_characters_password_error">The password needs to consists of at least 6 characters</string>
+    <string name="validation_letters_digits_password_error">The password needs to contain at least one digit and one letter</string>
+    <string name="validation_passwords_dont_match_error">The passwords don\'t match</string>
+    <string name="validation_terms_not_accepted_error">Please accept the terms</string>
 </resources>

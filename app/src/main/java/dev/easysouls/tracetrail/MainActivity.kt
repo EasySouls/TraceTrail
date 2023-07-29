@@ -10,7 +10,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -22,9 +24,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
+import dev.easysouls.tracetrail.data.MissingPerson
 import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
-import dev.easysouls.tracetrail.presentation.sign_in.AuthViewModel
+import dev.easysouls.tracetrail.presentation.sign_in.GoogleAuthViewModel
 import dev.easysouls.tracetrail.presentation.sign_in.GoogleAuthUiClient
+import dev.easysouls.tracetrail.presentation.sign_in.RegistrationScreen
+import dev.easysouls.tracetrail.presentation.sign_in.RegistrationViewModel
 import dev.easysouls.tracetrail.presentation.sign_in.SignInScreen
 import dev.easysouls.tracetrail.ui.finder.FinderUI
 import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
@@ -49,11 +54,11 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "auth") {
                     navigation(
-                        startDestination = "login",
+                        startDestination = "register",
                         route = "auth"
                     ) {
                         composable("login") {
-                            val viewModel = it.sharedViewModel<AuthViewModel>(navController)
+                            val viewModel = it.sharedViewModel<GoogleAuthViewModel>(navController)
                             val state by viewModel.state.collectAsStateWithLifecycle()
 
                             LaunchedEffect(key1 = Unit) {
@@ -112,10 +117,12 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("register") {
-                            val viewModel = it.sharedViewModel<AuthViewModel>(navController)
+                            val viewModel = viewModel<RegistrationViewModel>()
+
+                            RegistrationScreen(viewModel)
                         }
                         composable("forgot_password") {
-                            val viewModel = it.sharedViewModel<AuthViewModel>(navController)
+                            val viewModel = it.sharedViewModel<GoogleAuthViewModel>(navController)
                         }
                     }
                     navigation(
@@ -149,7 +156,14 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("missing_persons") {
-                            FinderUI()
+                            val person1 = MissingPerson("James", "", "", "", "")
+                            val person2 = MissingPerson("James", "", "", "", "")
+                            val person3 = MissingPerson("James", "", "", "", "")
+                            val person4 = MissingPerson("James", "", "", "", "")
+                            var missingPersons by remember {
+                                mutableStateOf(listOf(person1, person2, person3, person4))
+                            }
+                            FinderUI(missingPersons)
                         }
                     }
                 }

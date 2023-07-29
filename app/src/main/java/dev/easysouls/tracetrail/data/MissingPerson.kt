@@ -5,7 +5,7 @@ import com.google.android.gms.maps.model.LatLng
 data class MissingPerson(
     val firstName: String,
     val lastName: String,
-    val lastKnownLocation: LatLng,
-    val images: List<String>?,
+    val lastKnownLocation: String,
+    val image: String,
     val uploadedBy: String = "Unknown"
 )
