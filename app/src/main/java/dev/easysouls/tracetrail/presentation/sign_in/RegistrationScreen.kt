@@ -50,9 +50,6 @@ fun RegistrationScreen(viewModel: RegistrationViewModel) {
                         "Registration successful",
                         Toast.LENGTH_LONG
                     ).show()
-
-                    val account = Account(state.email, state.password, Date())
-                    saveAccount(account, context)
                 }
             }
         }
@@ -163,23 +160,6 @@ fun RegistrationScreen(viewModel: RegistrationViewModel) {
             modifier = Modifier.align(Alignment.End)
         ) {
             Text(text = "Submit")
-        }
-    }
-}
-
-fun saveAccount(account: Account, context: Context) = CoroutineScope(Dispatchers.IO).launch {
-    val db = Firebase.firestore
-
-    try {
-        db.collection("accounts").add(account).await()
-
-    } catch (e: Exception) {
-        withContext(Dispatchers.Main) {
-            Toast.makeText(
-                context,
-                e.message,
-                Toast.LENGTH_LONG
-            ).show()
         }
     }
 }
