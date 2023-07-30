@@ -1,7 +1,5 @@
 package dev.easysouls.tracetrail.presentation.sign_in
 
-import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,17 +24,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import java.util.Date
 
 @Composable
-fun RegistrationScreen(viewModel: RegistrationViewModel) {
+fun RegistrationScreen(viewModel: RegistrationViewModel,) {
     val state = viewModel.state
     val context = LocalContext.current
 
@@ -50,6 +40,8 @@ fun RegistrationScreen(viewModel: RegistrationViewModel) {
                         "Registration successful",
                         Toast.LENGTH_LONG
                     ).show()
+
+
                 }
             }
         }

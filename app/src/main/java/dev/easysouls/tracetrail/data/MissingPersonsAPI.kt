@@ -21,7 +21,7 @@ class MissingPersonsAPI {
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     context,
-                    "Successfully saved data",
+                    "Successfully saved ${person.firstName}'s data",
                     Toast.LENGTH_LONG
                 ).show()
             }

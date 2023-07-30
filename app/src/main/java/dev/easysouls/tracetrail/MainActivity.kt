@@ -24,13 +24,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
+import com.google.firebase.auth.FirebaseUser
 import dev.easysouls.tracetrail.data.MissingPerson
 import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
+import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthManager
 import dev.easysouls.tracetrail.presentation.sign_in.GoogleAuthViewModel
-import dev.easysouls.tracetrail.presentation.sign_in.GoogleAuthUiClient
 import dev.easysouls.tracetrail.presentation.sign_in.RegistrationScreen
 import dev.easysouls.tracetrail.presentation.sign_in.RegistrationViewModel
 import dev.easysouls.tracetrail.presentation.sign_in.SignInScreen
+import dev.easysouls.tracetrail.presentation.sign_in.StartScreen
 import dev.easysouls.tracetrail.ui.finder.FinderUI
 import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
 import kotlinx.coroutines.launch
@@ -39,12 +41,21 @@ private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
 
 class MainActivity : ComponentActivity() {
 
-    private val googleAuthUiClient by lazy {
+    /*private val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
             context = applicationContext,
             oneTapClient = Identity.getSignInClient(applicationContext)
         )
+    }*/
+
+    private val firebaseAuthManager: FirebaseAuthManager by lazy {
+        FirebaseAuthManager(
+            context = applicationContext,
+            oneTapClient = Identity.getSignInClient(applicationContext)
+        )
     }
+
+    private lateinit var currentUser: FirebaseUser
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,15 +65,21 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "auth") {
                     navigation(
-                        startDestination = "register",
+                        startDestination = "start_screen",
                         route = "auth"
                     ) {
+                        composable("start_screen") {
+                            StartScreen(
+                                signInWithEmailAndPassword = { navController.navigate("register") },
+                                signInWithGoogle = { navController.navigate("login") }
+                            )
+                        }
                         composable("login") {
                             val viewModel = it.sharedViewModel<GoogleAuthViewModel>(navController)
                             val state by viewModel.state.collectAsStateWithLifecycle()
 
                             LaunchedEffect(key1 = Unit) {
-                                if (googleAuthUiClient.getSignedInUser() != null) {
+                                if (firebaseAuthManager.getSignedInUser() != null) {
                                     navController.navigate("main") {
                                         popUpTo("auth") {
                                             inclusive = true
@@ -76,7 +93,7 @@ class MainActivity : ComponentActivity() {
                                 onResult = { result ->
                                     if (result.resultCode == RESULT_OK) {
                                         lifecycleScope.launch {
-                                            val signInResult = googleAuthUiClient.signInWithIntent(
+                                            val signInResult = firebaseAuthManager.signInWithIntent(
                                                 intent = result.data ?: return@launch
                                             )
                                             viewModel.onSignInResult(signInResult)
@@ -106,7 +123,7 @@ class MainActivity : ComponentActivity() {
                                 state = state,
                                 onSignInClick = {
                                     lifecycleScope.launch {
-                                        val signInIntentSender = googleAuthUiClient.signIn()
+                                        val signInIntentSender = firebaseAuthManager.signIn()
                                         launcher.launch(
                                             IntentSenderRequest.Builder(
                                                 signInIntentSender ?: return@launch
@@ -132,10 +149,10 @@ class MainActivity : ComponentActivity() {
                         composable("profile") {
 
                             ProfileScreen(
-                                userData = googleAuthUiClient.getSignedInUser(),
+                                userData = firebaseAuthManager.getSignedInUser(),
                                 onSignOut = {
                                     lifecycleScope.launch {
-                                        googleAuthUiClient.signOut()
+                                        firebaseAuthManager.signOut()
                                         Toast.makeText(
                                             applicationContext,
                                             "Signed Out",
