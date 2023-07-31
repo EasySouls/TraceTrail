@@ -7,12 +7,16 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -28,13 +32,15 @@ import com.google.firebase.auth.FirebaseUser
 import dev.easysouls.tracetrail.data.MissingPerson
 import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
 import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthManager
-import dev.easysouls.tracetrail.presentation.sign_in.GoogleAuthViewModel
+import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthViewModel
 import dev.easysouls.tracetrail.presentation.sign_in.RegistrationScreen
 import dev.easysouls.tracetrail.presentation.sign_in.RegistrationViewModel
 import dev.easysouls.tracetrail.presentation.sign_in.SignInScreen
 import dev.easysouls.tracetrail.presentation.sign_in.StartScreen
+import dev.easysouls.tracetrail.ui.CircularProgressBar
 import dev.easysouls.tracetrail.ui.finder.FinderUI
 import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
@@ -63,7 +69,39 @@ class MainActivity : ComponentActivity() {
         setContent {
             TraceTrailTheme {
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "auth") {
+
+                LaunchedEffect(key1 = Unit) {
+                    delay(1000)
+                    if (firebaseAuthManager.getSignedInUser() != null) {
+                        navController.navigate("main") {
+                            popUpTo("loading") {
+                                inclusive = true
+                            }
+                        }
+                    } else {
+                        navController.navigate("auth") {
+                            popUpTo("loading") {
+                                inclusive = true
+                            }
+                        }
+                    }
+                }
+
+                NavHost(navController = navController, startDestination = "loading") {
+
+                    // Only for displaying the loading screen while the app loads
+                    composable("loading") {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            CircularProgressBar(
+                                percentage = 0.8f,
+                                maxNumber = 100
+                            )
+                        }
+                    }
+
                     navigation(
                         startDestination = "start_screen",
                         route = "auth"
@@ -75,18 +113,8 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("login") {
-                            val viewModel = it.sharedViewModel<GoogleAuthViewModel>(navController)
+                            val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
                             val state by viewModel.state.collectAsStateWithLifecycle()
-
-                            LaunchedEffect(key1 = Unit) {
-                                if (firebaseAuthManager.getSignedInUser() != null) {
-                                    navController.navigate("main") {
-                                        popUpTo("auth") {
-                                            inclusive = true
-                                        }
-                                    }
-                                }
-                            }
 
                             val launcher = rememberLauncherForActivityResult(
                                 contract = ActivityResultContracts.StartIntentSenderForResult(),
@@ -139,7 +167,7 @@ class MainActivity : ComponentActivity() {
                             RegistrationScreen(viewModel)
                         }
                         composable("forgot_password") {
-                            val viewModel = it.sharedViewModel<GoogleAuthViewModel>(navController)
+                            val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
                         }
                     }
                     navigation(
