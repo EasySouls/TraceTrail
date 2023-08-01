@@ -26,22 +26,29 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun RegistrationScreen(viewModel: RegistrationViewModel,) {
-    val state = viewModel.state
+fun RegistrationScreen(
+    viewModel: FirebaseAuthViewModel,
+    signInState: SignInState,
+    registerUser: () -> Unit
+) {
+    val state = viewModel.registrationFormState
     val context = LocalContext.current
+
+    LaunchedEffect(key1 = signInState.signInError) {
+        signInState.signInError?.let { error ->
+            Toast.makeText(
+                context,
+                error,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
 
     LaunchedEffect(key1 = context) {
         viewModel.validationEvents.collect { event ->
-            when(event) {
-                is RegistrationViewModel.ValidationEvent.Success -> {
-                    // When validation was successful
-                    Toast.makeText(
-                        context,
-                        "Registration successful",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-
+            when (event) {
+                is FirebaseAuthViewModel.ValidationEvent.Success -> {
+                    registerUser()
                 }
             }
         }

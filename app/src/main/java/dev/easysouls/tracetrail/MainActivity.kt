@@ -14,7 +14,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
@@ -28,31 +27,20 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
-import com.google.firebase.auth.FirebaseUser
 import dev.easysouls.tracetrail.data.MissingPerson
 import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
 import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthManager
 import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthViewModel
 import dev.easysouls.tracetrail.presentation.sign_in.RegistrationScreen
-import dev.easysouls.tracetrail.presentation.sign_in.RegistrationViewModel
-import dev.easysouls.tracetrail.presentation.sign_in.SignInScreen
 import dev.easysouls.tracetrail.presentation.sign_in.StartScreen
 import dev.easysouls.tracetrail.ui.CircularProgressBar
 import dev.easysouls.tracetrail.ui.finder.FinderUI
 import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
 
 class MainActivity : ComponentActivity() {
-
-    /*private val googleAuthUiClient by lazy {
-        GoogleAuthUiClient(
-            context = applicationContext,
-            oneTapClient = Identity.getSignInClient(applicationContext)
-        )
-    }*/
 
     private val firebaseAuthManager: FirebaseAuthManager by lazy {
         FirebaseAuthManager(
@@ -60,8 +48,6 @@ class MainActivity : ComponentActivity() {
             oneTapClient = Identity.getSignInClient(applicationContext)
         )
     }
-
-    private lateinit var currentUser: FirebaseUser
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +57,6 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
 
                 LaunchedEffect(key1 = Unit) {
-                    delay(1000)
                     if (firebaseAuthManager.getSignedInUser() != null) {
                         navController.navigate("main") {
                             popUpTo("loading") {
@@ -107,14 +92,8 @@ class MainActivity : ComponentActivity() {
                         route = "auth"
                     ) {
                         composable("start_screen") {
-                            StartScreen(
-                                signInWithEmailAndPassword = { navController.navigate("register") },
-                                signInWithGoogle = { navController.navigate("login") }
-                            )
-                        }
-                        composable("login") {
                             val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
-                            val state by viewModel.state.collectAsStateWithLifecycle()
+                            val state by viewModel.signInState.collectAsStateWithLifecycle()
 
                             val launcher = rememberLauncherForActivityResult(
                                 contract = ActivityResultContracts.StartIntentSenderForResult(),
@@ -147,9 +126,10 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            SignInScreen(
+                            StartScreen(
                                 state = state,
-                                onSignInClick = {
+                                signInWithEmailAndPassword = { navController.navigate("register") },
+                                signInWithGoogle = {
                                     lifecycleScope.launch {
                                         val signInIntentSender = firebaseAuthManager.signIn()
                                         launcher.launch(
@@ -162,9 +142,38 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("register") {
-                            val viewModel = viewModel<RegistrationViewModel>()
+                            val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
+                            val signInState by viewModel.signInState.collectAsStateWithLifecycle()
 
-                            RegistrationScreen(viewModel)
+                            LaunchedEffect(key1 = signInState.isSignInSuccessful) {
+                                if (signInState.isSignInSuccessful) {
+                                    Toast.makeText(
+                                        applicationContext,
+                                        "Sign in successful",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+                                    navController.navigate("main") {
+                                        popUpTo("auth") {
+                                            inclusive = true
+                                        }
+                                    }
+                                    viewModel.resetState()
+                                }
+                            }
+
+                            RegistrationScreen(
+                                viewModel = viewModel,
+                                signInState = signInState,
+                                registerUser = {
+                                    lifecycleScope.launch {
+                                        val signInResult = firebaseAuthManager.createAccountWithEmailAndPassword(
+                                            viewModel.registrationFormState.email,
+                                            viewModel.registrationFormState.password
+                                        )
+                                        viewModel.onSignInResult(signInResult)
+                                    }
+                                })
                         }
                         composable("forgot_password") {
                             val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
@@ -205,7 +214,7 @@ class MainActivity : ComponentActivity() {
                             val person2 = MissingPerson("James", "", "", "", "")
                             val person3 = MissingPerson("James", "", "", "", "")
                             val person4 = MissingPerson("James", "", "", "", "")
-                            var missingPersons by remember {
+                            val missingPersons by remember {
                                 mutableStateOf(listOf(person1, person2, person3, person4))
                             }
                             FinderUI(missingPersons)
