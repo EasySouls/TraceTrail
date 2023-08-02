@@ -1,5 +1,8 @@
 package dev.easysouls.tracetrail
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -7,8 +10,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,6 +23,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -28,6 +36,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
 import dev.easysouls.tracetrail.data.MissingPerson
+import dev.easysouls.tracetrail.presentation.navigation.NavigationService
 import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
 import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthManager
 import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthViewModel
@@ -51,6 +60,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.POST_NOTIFICATIONS,
+                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                    ),
+                0
+            )
+        }
 
         setContent {
             TraceTrailTheme {
@@ -175,12 +196,12 @@ class MainActivity : ComponentActivity() {
                                     }
                                 })
                         }
-                        composable("forgot_password") {
+                        composable("login") {
                             val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
                         }
                     }
                     navigation(
-                        startDestination = "profile",
+                        startDestination = "test",
                         route = "main"
                     ) {
                         composable("profile") {
@@ -218,6 +239,32 @@ class MainActivity : ComponentActivity() {
                                 mutableStateOf(listOf(person1, person2, person3, person4))
                             }
                             FinderUI(missingPersons)
+                        }
+                        composable("map") {
+                        }
+                        composable("test") {
+                            Column(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Button(onClick = {
+                                    Intent(applicationContext, NavigationService::class.java).also {
+                                        it.action = NavigationService.Actions.START.toString()
+                                        startService(it)
+                                    }
+                                }) {
+                                    Text("Start service")
+                                }
+                                Button(onClick = {
+                                    Intent(applicationContext, NavigationService::class.java).also {
+                                        it.action = NavigationService.Actions.STOP.toString()
+                                        startService(it)
+                                    }
+                                }) {
+                                    Text("Stop service")
+                                }
+                            }
                         }
                     }
                 }
