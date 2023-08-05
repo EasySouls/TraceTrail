@@ -32,10 +32,11 @@ import dev.easysouls.tracetrail.presentation.sign_in.UserData
 fun ProfileScreen(
     userData: UserData?,
     onSignOut: () -> Unit,
-    onNavigateToFinderUI: () -> Unit
+    onNavigateToFinderUI: () -> Unit,
+    modifier: Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)

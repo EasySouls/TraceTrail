@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.presentation.navigation
+package dev.easysouls.tracetrail
 
 import android.app.Application
 import android.app.NotificationChannel

@@ -9,3 +9,8 @@ val Pink80 = Color(0xFFEFB8C8)
 val Purple40 = Color(0xFF6650a4)
 val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
+
+val Avocado = Color(0xFF568203)
+val BangladeshGreen = Color(0xFF006A4E)
+val Beer = Color(0xFFF28E1C)
+val BarnRed = Color(0xFF7C0A02)

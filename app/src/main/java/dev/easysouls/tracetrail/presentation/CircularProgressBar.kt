@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.ui
+package dev.easysouls.tracetrail.presentation
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween

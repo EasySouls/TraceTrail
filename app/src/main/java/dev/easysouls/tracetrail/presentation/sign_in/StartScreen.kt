@@ -24,6 +24,7 @@ import dev.easysouls.tracetrail.R
 fun StartScreen(
     state: SignInState,
     signInWithEmailAndPassword: () -> Unit,
+    loginWithEmailAndPassword: () -> Unit,
     signInWithGoogle: () -> Unit
 ) {
     val context = LocalContext.current
@@ -51,6 +52,14 @@ fun StartScreen(
             ) {
                 Text(text = "Sign in with email")
                 Icon(painter = painterResource(R.drawable.ic_profile), contentDescription = "Sign in with email icon")
+            }
+            Button(
+                onClick = loginWithEmailAndPassword,
+                shape = RoundedCornerShape(2.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary)
+            ) {
+                Text(text = "Login")
+                Icon(painter = painterResource(R.drawable.ic_profile), contentDescription = "Log in with email icon")
             }
             Button(
                 onClick = signInWithGoogle,

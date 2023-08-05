@@ -37,6 +37,8 @@ class FirebaseAuthViewModel(
         _state.update { SignInState() }
     }
 
+    var loginFormState by mutableStateOf(LoginFormState())
+
     var registrationFormState by mutableStateOf(RegistrationFormState())
 
     private val validationEventChannel = Channel<ValidationEvent>()

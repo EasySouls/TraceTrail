@@ -1,9 +1,13 @@
 package dev.easysouls.tracetrail
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -14,8 +18,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,7 +33,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -36,20 +49,40 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
 import dev.easysouls.tracetrail.data.MissingPerson
-import dev.easysouls.tracetrail.presentation.navigation.NavigationService
+import dev.easysouls.tracetrail.domain.services.NavigationService
+import dev.easysouls.tracetrail.presentation.CircularProgressBar
+import dev.easysouls.tracetrail.presentation.CoarseLocationTextProvider
+import dev.easysouls.tracetrail.presentation.FineLocationTextProvider
+import dev.easysouls.tracetrail.presentation.NavigationBar
+import dev.easysouls.tracetrail.presentation.PermissionDialog
+import dev.easysouls.tracetrail.presentation.PostNotificationsTextProvider
+import dev.easysouls.tracetrail.presentation.finder.FinderUI
+import dev.easysouls.tracetrail.presentation.map.MapScreen
+import dev.easysouls.tracetrail.presentation.map.MapViewModel
 import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
 import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthManager
 import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthViewModel
+import dev.easysouls.tracetrail.presentation.sign_in.LoginScreen
 import dev.easysouls.tracetrail.presentation.sign_in.RegistrationScreen
 import dev.easysouls.tracetrail.presentation.sign_in.StartScreen
-import dev.easysouls.tracetrail.ui.CircularProgressBar
-import dev.easysouls.tracetrail.ui.finder.FinderUI
 import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
 import kotlinx.coroutines.launch
 
 private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
+
+    private val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        arrayOf(
+            Manifest.permission.POST_NOTIFICATIONS,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
 
     private val firebaseAuthManager: FirebaseAuthManager by lazy {
         FirebaseAuthManager(
@@ -61,20 +94,31 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(
-                    Manifest.permission.POST_NOTIFICATIONS,
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                    ),
-                0
-            )
-        }
-
         setContent {
             TraceTrailTheme {
+                val context = LocalContext.current
+
+                val hasNotificationPermission by remember {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        mutableStateOf(
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == PackageManager.PERMISSION_GRANTED
+                        )
+                    } else mutableStateOf(true)
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(
+                            Manifest.permission.POST_NOTIFICATIONS,
+                        ),
+                        0
+                    )
+                }
+
                 val navController = rememberNavController()
 
                 LaunchedEffect(key1 = Unit) {
@@ -102,7 +146,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxSize()
                         ) {
                             CircularProgressBar(
-                                percentage = 0.8f,
+                                percentage = 1f,
                                 maxNumber = 100
                             )
                         }
@@ -150,6 +194,7 @@ class MainActivity : ComponentActivity() {
                             StartScreen(
                                 state = state,
                                 signInWithEmailAndPassword = { navController.navigate("register") },
+                                loginWithEmailAndPassword = { navController.navigate("login") },
                                 signInWithGoogle = {
                                     lifecycleScope.launch {
                                         val signInIntentSender = firebaseAuthManager.signIn()
@@ -188,46 +233,100 @@ class MainActivity : ComponentActivity() {
                                 signInState = signInState,
                                 registerUser = {
                                     lifecycleScope.launch {
-                                        val signInResult = firebaseAuthManager.createAccountWithEmailAndPassword(
-                                            viewModel.registrationFormState.email,
-                                            viewModel.registrationFormState.password
-                                        )
+                                        val signInResult =
+                                            firebaseAuthManager.createAccountWithEmailAndPassword(
+                                                viewModel.registrationFormState.email,
+                                                viewModel.registrationFormState.password
+                                            )
                                         viewModel.onSignInResult(signInResult)
                                     }
-                                })
+                                }
+                            )
                         }
                         composable("login") {
                             val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
+                            val signInState by viewModel.signInState.collectAsStateWithLifecycle()
+
+                            LaunchedEffect(key1 = signInState.isSignInSuccessful) {
+                                if (signInState.isSignInSuccessful) {
+                                    Toast.makeText(
+                                        applicationContext,
+                                        "Sign in successful",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+                                    navController.navigate("main") {
+                                        popUpTo("auth") {
+                                            inclusive = true
+                                        }
+                                    }
+                                    viewModel.resetState()
+                                }
+                            }
+
+                            LoginScreen(
+                                viewModel = viewModel,
+                                signInState = signInState,
+                                loginUser = {
+                                    lifecycleScope.launch {
+                                        val signInResult =
+                                            firebaseAuthManager.signInWithEmailAndPassword(
+                                                viewModel.loginFormState.email,
+                                                viewModel.loginFormState.password
+                                            )
+                                        viewModel.onSignInResult(signInResult)
+                                    }
+                                }
+                            )
                         }
                     }
                     navigation(
-                        startDestination = "test",
+                        startDestination = "map",
                         route = "main"
                     ) {
+
                         composable("profile") {
+                            Surface(
+                                modifier = Modifier.fillMaxSize(),
+                                color = MaterialTheme.colorScheme.background
+                            ) {
+                                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-                            ProfileScreen(
-                                userData = firebaseAuthManager.getSignedInUser(),
-                                onSignOut = {
-                                    lifecycleScope.launch {
-                                        firebaseAuthManager.signOut()
-                                        Toast.makeText(
-                                            applicationContext,
-                                            "Signed Out",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-
-                                        navController.navigate("auth") {
-                                            popUpTo("main") {
-                                                inclusive = true
-                                            }
-                                        }
+                                Scaffold(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                                    topBar = {
+                                        NavigationBar(
+                                            navController = navController,
+                                            scrollBehavior = scrollBehavior)
                                     }
-                                },
-                                onNavigateToFinderUI = {
-                                    navController.navigate("missing_persons")
+                                ) { values ->
+                                    ProfileScreen(
+                                        userData = firebaseAuthManager.getSignedInUser(),
+                                        onSignOut = {
+                                            lifecycleScope.launch {
+                                                firebaseAuthManager.signOut()
+                                                Toast.makeText(
+                                                    applicationContext,
+                                                    "Signed Out",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+
+                                                navController.navigate("auth") {
+                                                    popUpTo("main") {
+                                                        inclusive = true
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        onNavigateToFinderUI = {
+                                            navController.navigate("missing_persons")
+                                        },
+                                        modifier = Modifier.padding(values)
+                                    )
                                 }
-                            )
+                            }
                         }
 
                         composable("missing_persons") {
@@ -241,6 +340,77 @@ class MainActivity : ComponentActivity() {
                             FinderUI(missingPersons)
                         }
                         composable("map") {
+                            val viewModel = viewModel<MapViewModel>()
+                            val dialogQueue = viewModel.visiblePermissionDialogQueue
+
+                            val coarseLocationPermissionResultLauncher =
+                                rememberLauncherForActivityResult(
+                                    contract = ActivityResultContracts.RequestPermission(),
+                                    onResult = { isGranted ->
+                                        viewModel.onPermissionResult(
+                                            permission = Manifest.permission.ACCESS_COARSE_LOCATION,
+                                            isGranted = isGranted
+                                        )
+                                    }
+                                )
+
+                            val multiplePermissionResultLauncher =
+                                rememberLauncherForActivityResult(
+                                    contract = ActivityResultContracts.RequestMultiplePermissions(),
+                                    onResult = { perms ->
+                                        perms.keys.forEach { permission ->
+                                            viewModel.onPermissionResult(
+                                                permission = permission,
+                                                isGranted = perms[permission] == true
+                                            )
+                                        }
+                                    }
+                                )
+                            MapScreen(navController)
+
+                            /*Column(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Button(onClick = {
+                                    coarseLocationPermissionResultLauncher.launch(
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                    )
+                                }) {
+                                    Text(text = "Request one permission")
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(onClick = {
+                                    multiplePermissionResultLauncher.launch(permissionsToRequest)
+                                }) {
+                                    Text(text = "Request multiple permissions")
+                                }
+                            }*/
+
+                            dialogQueue
+                                .reversed()
+                                .forEach { permission ->
+                                    PermissionDialog(
+                                        permissionTextProvider = when (permission) {
+                                            Manifest.permission.ACCESS_COARSE_LOCATION -> CoarseLocationTextProvider()
+                                            Manifest.permission.ACCESS_FINE_LOCATION -> FineLocationTextProvider()
+                                            Manifest.permission.POST_NOTIFICATIONS -> PostNotificationsTextProvider()
+                                            else -> return@forEach
+                                        },
+                                        isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
+                                            permission
+                                        ),
+                                        onDismiss = viewModel::dismissDialog,
+                                        onOkayClick = {
+                                            viewModel.dismissDialog()
+                                            multiplePermissionResultLauncher.launch(
+                                                arrayOf(permission)
+                                            )
+                                        },
+                                        onGoToAppSettingsClick = { openAppSettings() }
+                                    )
+                                }
                         }
                         composable("test") {
                             Column(
@@ -281,4 +451,11 @@ inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(navControll
         navController.getBackStackEntry(navGraphRoute)
     }
     return viewModel(parentEntry)
+}
+
+fun Activity.openAppSettings() {
+    Intent(
+        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+        Uri.fromParts("package", packageName, null)
+    ).also(::startActivity)
 }

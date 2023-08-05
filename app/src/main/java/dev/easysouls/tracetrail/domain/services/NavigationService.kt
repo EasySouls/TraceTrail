@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.presentation.navigation
+package dev.easysouls.tracetrail.domain.services
 
 import android.app.Service
 import android.content.Intent

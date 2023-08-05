@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.ui.home
+package dev.easysouls.tracetrail.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

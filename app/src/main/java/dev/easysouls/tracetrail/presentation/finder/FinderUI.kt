@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.ui.finder
+package dev.easysouls.tracetrail.presentation.finder
 
 import android.widget.EditText
 import androidx.compose.animation.AnimatedVisibility
