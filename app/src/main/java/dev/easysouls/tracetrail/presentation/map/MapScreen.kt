@@ -13,14 +13,16 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import dev.easysouls.tracetrail.presentation.NavigationBar
 
@@ -34,7 +36,6 @@ fun MapScreen(
     val uiSettings = remember {
         MapUiSettings(zoomControlsEnabled = false)
     }
-    val scope = rememberCoroutineScope()
 
     val budapest = LatLng(47.526642, 19.046394)
     val cameraPositionState = rememberCameraPositionState {
@@ -68,8 +69,28 @@ fun MapScreen(
             properties = viewModel.state.properties,
             uiSettings = uiSettings,
             onMapLongClick = {
-                
+                viewModel.onEvent(MapEvent.OnMapLongClick(it))
             }
-        )
+        ) {
+            viewModel.state.missingPersons.forEach { person ->
+                Marker(
+                    state = MarkerState(LatLng(person.lat, person.lng)),
+                    title = "Missing Person (${person.lat}, ${person.lng})",
+                    snippet = "Name: ${person.firstName} ${person.lastName}, Uploaded by: ${person.uploadedBy}",
+                    onClick = {
+                        it.showInfoWindow()
+                        true
+                    },
+                    onInfoWindowLongClick = {
+                        viewModel.onEvent(
+                            MapEvent.OnInfoWindowLongClick(person)
+                        )
+                    },
+                    icon = BitmapDescriptorFactory.defaultMarker(
+                        BitmapDescriptorFactory.HUE_ORANGE
+                    )
+                )
+            }
+        }
     }
 }

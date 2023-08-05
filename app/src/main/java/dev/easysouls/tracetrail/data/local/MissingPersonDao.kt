@@ -10,11 +10,13 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface MissingPersonDao {
 
+    // Apparently you can't use suspend functions with room queries :(
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertMissingPerson(person: MissingPersonEntity)
+    fun insertMissingPerson(person: MissingPersonEntity)
 
     @Delete
-    suspend fun deleteMissingPerson(person: MissingPersonEntity)
+    fun deleteMissingPerson(person: MissingPersonEntity)
 
     @Query("SELECT * FROM missingpersonentity")
     fun getMissingPersons(): Flow<List<MissingPersonEntity>>

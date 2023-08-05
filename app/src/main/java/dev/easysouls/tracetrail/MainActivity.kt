@@ -37,6 +37,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -48,7 +49,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
-import dev.easysouls.tracetrail.data.MissingPerson
+import dagger.hilt.android.AndroidEntryPoint
+import dev.easysouls.tracetrail.domain.model.MissingPerson
 import dev.easysouls.tracetrail.domain.services.NavigationService
 import dev.easysouls.tracetrail.presentation.CircularProgressBar
 import dev.easysouls.tracetrail.presentation.CoarseLocationTextProvider
@@ -70,6 +72,7 @@ import kotlinx.coroutines.launch
 
 private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
 
+@AndroidEntryPoint
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
 
@@ -330,17 +333,13 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("missing_persons") {
-                            val person1 = MissingPerson("James", "", "", "", "")
-                            val person2 = MissingPerson("James", "", "", "", "")
-                            val person3 = MissingPerson("James", "", "", "", "")
-                            val person4 = MissingPerson("James", "", "", "", "")
                             val missingPersons by remember {
-                                mutableStateOf(listOf(person1, person2, person3, person4))
+                                mutableStateOf(listOf<MissingPerson>())
                             }
                             FinderUI(missingPersons)
                         }
                         composable("map") {
-                            val viewModel = viewModel<MapViewModel>()
+                            val viewModel = hiltViewModel<MapViewModel>()
                             val dialogQueue = viewModel.visiblePermissionDialogQueue
 
                             val coarseLocationPermissionResultLauncher =
