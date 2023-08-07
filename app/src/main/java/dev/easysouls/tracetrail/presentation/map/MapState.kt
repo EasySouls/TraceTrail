@@ -1,7 +1,7 @@
 package dev.easysouls.tracetrail.presentation.map
 
 import com.google.maps.android.compose.MapProperties
-import dev.easysouls.tracetrail.domain.model.MissingPerson
+import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 
 data class MapState(
     val properties: MapProperties = MapProperties(),

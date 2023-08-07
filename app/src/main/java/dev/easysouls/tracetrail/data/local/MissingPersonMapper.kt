@@ -1,6 +1,6 @@
 package dev.easysouls.tracetrail.data.local
 
-import dev.easysouls.tracetrail.domain.model.MissingPerson
+import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 
 fun MissingPersonEntity.toMissingPerson(): MissingPerson {
     return MissingPerson(

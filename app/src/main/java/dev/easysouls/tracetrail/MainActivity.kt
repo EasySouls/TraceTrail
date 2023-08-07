@@ -17,7 +17,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,8 +52,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.AndroidEntryPoint
-import dev.easysouls.tracetrail.domain.model.MissingPerson
+import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 import dev.easysouls.tracetrail.domain.services.NavigationService
 import dev.easysouls.tracetrail.presentation.CircularProgressBar
 import dev.easysouls.tracetrail.presentation.CoarseLocationTextProvider
@@ -76,13 +83,17 @@ private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
 
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
     private val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         arrayOf(
             Manifest.permission.POST_NOTIFICATIONS,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION
         )
     } else {
         arrayOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION
         )
     }
@@ -100,6 +111,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             TraceTrailTheme {
                 val context = LocalContext.current
+
+                fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
                 val hasNotificationPermission by remember {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -342,7 +355,9 @@ class MainActivity : ComponentActivity() {
                             val viewModel = hiltViewModel<MapViewModel>()
                             val dialogQueue = viewModel.visiblePermissionDialogQueue
 
-                            val coarseLocationPermissionResultLauncher =
+
+
+                            /*val coarseLocationPermissionResultLauncher =
                                 rememberLauncherForActivityResult(
                                     contract = ActivityResultContracts.RequestPermission(),
                                     onResult = { isGranted ->
@@ -351,7 +366,7 @@ class MainActivity : ComponentActivity() {
                                             isGranted = isGranted
                                         )
                                     }
-                                )
+                                )*/
 
                             val multiplePermissionResultLauncher =
                                 rememberLauncherForActivityResult(
@@ -365,7 +380,27 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 )
-                            MapScreen(navController)
+
+                            LaunchedEffect(key1 = multiplePermissionResultLauncher) {
+                                multiplePermissionResultLauncher.launch(permissionsToRequest)
+                            }
+
+                            /*coarseLocationPermissionResultLauncher.launch(
+                                Manifest.permission.ACCESS_COARSE_LOCATION
+                            )*/
+
+                            if (ContextCompat.checkSelfPermission(
+                                    this@MainActivity, Manifest.permission.ACCESS_COARSE_LOCATION)
+                                == PackageManager.PERMISSION_GRANTED) {
+                                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+                                    .addOnSuccessListener { location ->
+                                        val lat = location.latitude
+                                        val lng = location.longitude
+                                        viewModel.currentLocation = LatLng(lat, lng)
+                                    }
+                            }
+
+                            MapScreen(navController, viewModel)
 
                             /*Column(
                                 modifier = Modifier.fillMaxSize(),
@@ -434,6 +469,9 @@ class MainActivity : ComponentActivity() {
                                     Text("Stop service")
                                 }
                             }
+                        }
+                        composable("weather") {
+
                         }
                     }
                 }

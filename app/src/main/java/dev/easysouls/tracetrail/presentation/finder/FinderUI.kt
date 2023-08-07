@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import dev.easysouls.tracetrail.R
-import dev.easysouls.tracetrail.domain.model.MissingPerson
+import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 
 @Composable
 fun FinderUI(persons: List<MissingPerson>?) {

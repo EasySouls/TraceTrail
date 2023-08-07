@@ -5,19 +5,18 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MissingPersonDao {
 
-    // Apparently you can't use suspend functions with room queries :(
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertMissingPerson(person: MissingPersonEntity)
+    @Upsert
+    suspend fun insertMissingPerson(person: MissingPersonEntity)
 
     @Delete
-    fun deleteMissingPerson(person: MissingPersonEntity)
+    suspend fun deleteMissingPerson(person: MissingPersonEntity)
 
-    @Query("SELECT * FROM missingpersonentity")
+    @Query("SELECT * FROM missing_people")
     fun getMissingPersons(): Flow<List<MissingPersonEntity>>
 }

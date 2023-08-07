@@ -1,7 +1,7 @@
 package dev.easysouls.tracetrail.data.local
 
-import dev.easysouls.tracetrail.domain.model.MissingPerson
-import dev.easysouls.tracetrail.domain.repository.MissingPersonRepository
+import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
+import dev.easysouls.tracetrail.domain.missing_person.repository.MissingPersonRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

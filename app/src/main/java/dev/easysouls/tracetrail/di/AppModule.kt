@@ -8,7 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dev.easysouls.tracetrail.data.local.MissingPersonDatabase
 import dev.easysouls.tracetrail.data.local.MissingPersonRepositoryImpl
-import dev.easysouls.tracetrail.domain.repository.MissingPersonRepository
+import dev.easysouls.tracetrail.domain.missing_person.repository.MissingPersonRepository
 import javax.inject.Singleton
 
 @Module

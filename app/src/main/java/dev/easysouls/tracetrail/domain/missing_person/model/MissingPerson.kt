@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.domain.model
+package dev.easysouls.tracetrail.domain.missing_person.model
 
 data class MissingPerson(
     val id: Int? = null,

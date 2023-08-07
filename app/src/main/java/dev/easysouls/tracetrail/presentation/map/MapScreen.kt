@@ -1,5 +1,6 @@
 package dev.easysouls.tracetrail.presentation.map
 
+import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -14,8 +15,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -26,11 +30,12 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import dev.easysouls.tracetrail.presentation.NavigationBar
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     navController: NavHostController,
-    viewModel: MapViewModel = viewModel()
+    viewModel: MapViewModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val uiSettings = remember {
@@ -39,7 +44,11 @@ fun MapScreen(
 
     val budapest = LatLng(47.526642, 19.046394)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(budapest, 10f)
+        position = if (viewModel.currentLocation != null) {
+            CameraPosition.fromLatLngZoom(viewModel.currentLocation!!, 10f)
+        } else {
+            CameraPosition.fromLatLngZoom(budapest, 10f)
+        }
     }
 
     Scaffold(
