@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.data.remote.weather
+package dev.easysouls.tracetrail.data.weather.remote
 
 import com.squareup.moshi.Json
 

@@ -7,27 +7,27 @@ sealed class WeatherType(
     val weatherDesc: String,
     @DrawableRes val iconRes: Int
 ) {
-    object ClearSky : WeatherType(
+    data object ClearSky : WeatherType(
         weatherDesc = "Clear sky",
         iconRes = R.drawable.ic_sunny
     )
-    object MainlyClear : WeatherType(
+    data object MainlyClear : WeatherType(
         weatherDesc = "Mainly clear",
         iconRes = R.drawable.ic_cloudy
     )
-    object PartlyCloudy : WeatherType(
+    data object PartlyCloudy : WeatherType(
         weatherDesc = "Partly cloudy",
         iconRes = R.drawable.ic_cloudy
     )
-    object Overcast : WeatherType(
+    data object Overcast : WeatherType(
         weatherDesc = "Overcast",
         iconRes = R.drawable.ic_cloudy
     )
-    object Foggy : WeatherType(
+    data object Foggy : WeatherType(
         weatherDesc = "Foggy",
         iconRes = R.drawable.ic_very_cloudy
     )
-    object DepositingRimeFog : WeatherType(
+    data object DepositingRimeFog : WeatherType(
         weatherDesc = "Depositing rime fog",
         iconRes = R.drawable.ic_very_cloudy
     )
@@ -39,11 +39,11 @@ sealed class WeatherType(
         weatherDesc = "Moderate drizzle",
         iconRes = R.drawable.ic_rainshower
     )
-    object DenseDrizzle : WeatherType(
+    data object DenseDrizzle : WeatherType(
         weatherDesc = "Dense drizzle",
         iconRes = R.drawable.ic_rainshower
     )
-    object LightFreezingDrizzle : WeatherType(
+    data object LightFreezingDrizzle : WeatherType(
         weatherDesc = "Slight freezing drizzle",
         iconRes = R.drawable.ic_snowyrainy
     )

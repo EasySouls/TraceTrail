@@ -1,7 +1,7 @@
-package dev.easysouls.tracetrail.data.mappers
+package dev.easysouls.tracetrail.data.weather.mapper
 
-import dev.easysouls.tracetrail.data.remote.weather.WeatherDataDto
-import dev.easysouls.tracetrail.data.remote.weather.WeatherDto
+import dev.easysouls.tracetrail.data.weather.remote.WeatherDataDto
+import dev.easysouls.tracetrail.data.weather.remote.WeatherDto
 import dev.easysouls.tracetrail.domain.weather.model.WeatherData
 import dev.easysouls.tracetrail.domain.weather.model.WeatherInfo
 import dev.easysouls.tracetrail.domain.weather.model.WeatherType

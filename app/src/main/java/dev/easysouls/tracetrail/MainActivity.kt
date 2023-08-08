@@ -14,12 +14,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.registerForActivityResult
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -52,10 +51,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.AndroidEntryPoint
 import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 import dev.easysouls.tracetrail.domain.services.NavigationService
@@ -74,6 +69,10 @@ import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthViewModel
 import dev.easysouls.tracetrail.presentation.sign_in.LoginScreen
 import dev.easysouls.tracetrail.presentation.sign_in.RegistrationScreen
 import dev.easysouls.tracetrail.presentation.sign_in.StartScreen
+import dev.easysouls.tracetrail.presentation.weather.WeatherCart
+import dev.easysouls.tracetrail.presentation.weather.WeatherViewModel
+import dev.easysouls.tracetrail.ui.theme.DarkBlue
+import dev.easysouls.tracetrail.ui.theme.DeepBlue
 import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
 import kotlinx.coroutines.launch
 
@@ -82,8 +81,6 @@ private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
 @AndroidEntryPoint
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
-
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         arrayOf(
@@ -111,8 +108,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             TraceTrailTheme {
                 val context = LocalContext.current
-
-                fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
                 val hasNotificationPermission by remember {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -297,7 +292,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     navigation(
-                        startDestination = "map",
+                        startDestination = "weather",
                         route = "main"
                     ) {
 
@@ -315,7 +310,8 @@ class MainActivity : ComponentActivity() {
                                     topBar = {
                                         NavigationBar(
                                             navController = navController,
-                                            scrollBehavior = scrollBehavior)
+                                            scrollBehavior = scrollBehavior
+                                        )
                                     }
                                 ) { values ->
                                     ProfileScreen(
@@ -351,10 +347,10 @@ class MainActivity : ComponentActivity() {
                             }
                             FinderUI(missingPersons)
                         }
+
                         composable("map") {
                             val viewModel = hiltViewModel<MapViewModel>()
                             val dialogQueue = viewModel.visiblePermissionDialogQueue
-
 
 
                             /*val coarseLocationPermissionResultLauncher =
@@ -389,16 +385,6 @@ class MainActivity : ComponentActivity() {
                                 Manifest.permission.ACCESS_COARSE_LOCATION
                             )*/
 
-                            if (ContextCompat.checkSelfPermission(
-                                    this@MainActivity, Manifest.permission.ACCESS_COARSE_LOCATION)
-                                == PackageManager.PERMISSION_GRANTED) {
-                                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
-                                    .addOnSuccessListener { location ->
-                                        val lat = location.latitude
-                                        val lng = location.longitude
-                                        viewModel.currentLocation = LatLng(lat, lng)
-                                    }
-                            }
 
                             MapScreen(navController, viewModel)
 
@@ -446,6 +432,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                         }
+
                         composable("test") {
                             Column(
                                 modifier = Modifier.fillMaxSize(),
@@ -470,8 +457,28 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        composable("weather") {
 
+                        composable("weather") {
+                            val viewModel: WeatherViewModel by hiltViewModel()
+                            val permissionLauncher = registerForActivityResult(
+                                ActivityResultContracts.RequestMultiplePermissions()
+                            ) {
+                                viewModel.loadWeatherInfo()
+                            }
+                            permissionLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                                )
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(DarkBlue)
+                            ) {
+                                WeatherCart(state = viewModel.state, backgroundColor = DeepBlue)
+                            }
                         }
                     }
                 }
