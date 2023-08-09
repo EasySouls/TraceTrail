@@ -33,7 +33,7 @@ fun ProfileScreen(
     userData: UserData?,
     onSignOut: () -> Unit,
     onNavigateToFinderUI: () -> Unit,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier

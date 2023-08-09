@@ -1,6 +1,5 @@
 package dev.easysouls.tracetrail.presentation.map
 
-import androidx.annotation.RequiresPermission
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -15,11 +14,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -28,7 +23,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import dev.easysouls.tracetrail.presentation.NavigationBar
+import dev.easysouls.tracetrail.presentation.TopNavigationBar
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,7 +62,7 @@ fun MapScreen(
         },
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            NavigationBar(navController = navController)
+            TopNavigationBar(navController = navController)
         }
     ) { values ->
         GoogleMap(

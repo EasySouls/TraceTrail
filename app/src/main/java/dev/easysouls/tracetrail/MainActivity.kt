@@ -14,7 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.result.registerForActivityResult
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,10 +54,11 @@ import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.AndroidEntryPoint
 import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 import dev.easysouls.tracetrail.domain.services.NavigationService
+import dev.easysouls.tracetrail.presentation.BottomNavigationBar
 import dev.easysouls.tracetrail.presentation.CircularProgressBar
 import dev.easysouls.tracetrail.presentation.CoarseLocationTextProvider
 import dev.easysouls.tracetrail.presentation.FineLocationTextProvider
-import dev.easysouls.tracetrail.presentation.NavigationBar
+import dev.easysouls.tracetrail.presentation.TopNavigationBar
 import dev.easysouls.tracetrail.presentation.PermissionDialog
 import dev.easysouls.tracetrail.presentation.PostNotificationsTextProvider
 import dev.easysouls.tracetrail.presentation.finder.FinderUI
@@ -148,172 +149,201 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                NavHost(navController = navController, startDestination = "loading") {
+                val navigationItems = listOf(
+                    Screen.Auth,
+                    Screen.Main,
+                    Screen.Loading
+                )
 
-                    // Only for displaying the loading screen while the app loads
-                    composable("loading") {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            CircularProgressBar(
-                                percentage = 1f,
-                                maxNumber = 100
-                            )
-                        }
-                    }
+                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-                    navigation(
-                        startDestination = "start_screen",
-                        route = "auth"
+                Scaffold(
+                    topBar = {
+                        TopNavigationBar(
+                            navController = navController,
+                            scrollBehavior = scrollBehavior
+                        )
+                    },
+                    bottomBar = {
+                        BottomNavigationBar(
+                            navController = navController, navItems = navigationItems
+                        )
+                    }) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = Screen.Loading.route,
+                        modifier = Modifier.padding(innerPadding)
                     ) {
-                        composable("start_screen") {
-                            val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
-                            val state by viewModel.signInState.collectAsStateWithLifecycle()
 
-                            val launcher = rememberLauncherForActivityResult(
-                                contract = ActivityResultContracts.StartIntentSenderForResult(),
-                                onResult = { result ->
-                                    if (result.resultCode == RESULT_OK) {
+                        //Only for displaying the loading screen while the app loads
+                        composable(Screen.Loading.route) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                CircularProgressBar(
+                                    percentage = 1f,
+                                    maxNumber = 100
+                                )
+                            }
+                        }
+
+                        // Only for displaying the loading screen while the app loads
+                        composable("loading") {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                CircularProgressBar(
+                                    percentage = 1f,
+                                    maxNumber = 100
+                                )
+                            }
+                        }
+
+                        navigation(
+                            startDestination = "start_screen",
+                            route = Screen.Auth.route
+                        ) {
+                            composable("start_screen") {
+                                val viewModel =
+                                    it.sharedViewModel<FirebaseAuthViewModel>(navController)
+                                val state by viewModel.signInState.collectAsStateWithLifecycle()
+
+                                val launcher = rememberLauncherForActivityResult(
+                                    contract = ActivityResultContracts.StartIntentSenderForResult(),
+                                    onResult = { result ->
+                                        if (result.resultCode == RESULT_OK) {
+                                            lifecycleScope.launch {
+                                                val signInResult =
+                                                    firebaseAuthManager.signInWithIntent(
+                                                        intent = result.data ?: return@launch
+                                                    )
+                                                viewModel.onSignInResult(signInResult)
+                                            }
+                                        }
+                                    }
+                                )
+
+                                LaunchedEffect(key1 = state.isSignInSuccessful) {
+                                    if (state.isSignInSuccessful) {
+                                        Toast.makeText(
+                                            applicationContext,
+                                            "Sign in successful",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+
+                                        navController.navigate("main") {
+                                            popUpTo("auth") {
+                                                inclusive = true
+                                            }
+                                        }
+                                        viewModel.resetState()
+                                    }
+                                }
+
+                                StartScreen(
+                                    state = state,
+                                    signInWithEmailAndPassword = { navController.navigate("register") },
+                                    loginWithEmailAndPassword = { navController.navigate("login") },
+                                    signInWithGoogle = {
                                         lifecycleScope.launch {
-                                            val signInResult = firebaseAuthManager.signInWithIntent(
-                                                intent = result.data ?: return@launch
+                                            val signInIntentSender = firebaseAuthManager.signIn()
+                                            launcher.launch(
+                                                IntentSenderRequest.Builder(
+                                                    signInIntentSender ?: return@launch
+                                                ).build()
                                             )
+                                        }
+                                    }
+                                )
+                            }
+                            composable("register") {
+                                val viewModel =
+                                    it.sharedViewModel<FirebaseAuthViewModel>(navController)
+                                val signInState by viewModel.signInState.collectAsStateWithLifecycle()
+
+                                LaunchedEffect(key1 = signInState.isSignInSuccessful) {
+                                    if (signInState.isSignInSuccessful) {
+                                        Toast.makeText(
+                                            applicationContext,
+                                            "Sign in successful",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+
+                                        navController.navigate("main") {
+                                            popUpTo("auth") {
+                                                inclusive = true
+                                            }
+                                        }
+                                        viewModel.resetState()
+                                    }
+                                }
+
+                                RegistrationScreen(
+                                    viewModel = viewModel,
+                                    signInState = signInState,
+                                    registerUser = {
+                                        lifecycleScope.launch {
+                                            val signInResult =
+                                                firebaseAuthManager.createAccountWithEmailAndPassword(
+                                                    viewModel.registrationFormState.email,
+                                                    viewModel.registrationFormState.password
+                                                )
                                             viewModel.onSignInResult(signInResult)
                                         }
                                     }
+                                )
+                            }
+                            composable("login") {
+                                val viewModel =
+                                    it.sharedViewModel<FirebaseAuthViewModel>(navController)
+                                val signInState by viewModel.signInState.collectAsStateWithLifecycle()
+
+                                LaunchedEffect(key1 = signInState.isSignInSuccessful) {
+                                    if (signInState.isSignInSuccessful) {
+                                        Toast.makeText(
+                                            applicationContext,
+                                            "Sign in successful",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+
+                                        navController.navigate("main") {
+                                            popUpTo("auth") {
+                                                inclusive = true
+                                            }
+                                        }
+                                        viewModel.resetState()
+                                    }
                                 }
-                            )
 
-                            LaunchedEffect(key1 = state.isSignInSuccessful) {
-                                if (state.isSignInSuccessful) {
-                                    Toast.makeText(
-                                        applicationContext,
-                                        "Sign in successful",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-
-                                    navController.navigate("main") {
-                                        popUpTo("auth") {
-                                            inclusive = true
+                                LoginScreen(
+                                    viewModel = viewModel,
+                                    signInState = signInState,
+                                    loginUser = {
+                                        lifecycleScope.launch {
+                                            val signInResult =
+                                                firebaseAuthManager.signInWithEmailAndPassword(
+                                                    viewModel.loginFormState.email,
+                                                    viewModel.loginFormState.password
+                                                )
+                                            viewModel.onSignInResult(signInResult)
                                         }
                                     }
-                                    viewModel.resetState()
-                                }
+                                )
                             }
-
-                            StartScreen(
-                                state = state,
-                                signInWithEmailAndPassword = { navController.navigate("register") },
-                                loginWithEmailAndPassword = { navController.navigate("login") },
-                                signInWithGoogle = {
-                                    lifecycleScope.launch {
-                                        val signInIntentSender = firebaseAuthManager.signIn()
-                                        launcher.launch(
-                                            IntentSenderRequest.Builder(
-                                                signInIntentSender ?: return@launch
-                                            ).build()
-                                        )
-                                    }
-                                }
-                            )
                         }
-                        composable("register") {
-                            val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
-                            val signInState by viewModel.signInState.collectAsStateWithLifecycle()
 
-                            LaunchedEffect(key1 = signInState.isSignInSuccessful) {
-                                if (signInState.isSignInSuccessful) {
-                                    Toast.makeText(
-                                        applicationContext,
-                                        "Sign in successful",
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                        navigation(
+                            startDestination = "map",
+                            route = "main"
+                        ) {
 
-                                    navController.navigate("main") {
-                                        popUpTo("auth") {
-                                            inclusive = true
-                                        }
-                                    }
-                                    viewModel.resetState()
-                                }
-                            }
-
-                            RegistrationScreen(
-                                viewModel = viewModel,
-                                signInState = signInState,
-                                registerUser = {
-                                    lifecycleScope.launch {
-                                        val signInResult =
-                                            firebaseAuthManager.createAccountWithEmailAndPassword(
-                                                viewModel.registrationFormState.email,
-                                                viewModel.registrationFormState.password
-                                            )
-                                        viewModel.onSignInResult(signInResult)
-                                    }
-                                }
-                            )
-                        }
-                        composable("login") {
-                            val viewModel = it.sharedViewModel<FirebaseAuthViewModel>(navController)
-                            val signInState by viewModel.signInState.collectAsStateWithLifecycle()
-
-                            LaunchedEffect(key1 = signInState.isSignInSuccessful) {
-                                if (signInState.isSignInSuccessful) {
-                                    Toast.makeText(
-                                        applicationContext,
-                                        "Sign in successful",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-
-                                    navController.navigate("main") {
-                                        popUpTo("auth") {
-                                            inclusive = true
-                                        }
-                                    }
-                                    viewModel.resetState()
-                                }
-                            }
-
-                            LoginScreen(
-                                viewModel = viewModel,
-                                signInState = signInState,
-                                loginUser = {
-                                    lifecycleScope.launch {
-                                        val signInResult =
-                                            firebaseAuthManager.signInWithEmailAndPassword(
-                                                viewModel.loginFormState.email,
-                                                viewModel.loginFormState.password
-                                            )
-                                        viewModel.onSignInResult(signInResult)
-                                    }
-                                }
-                            )
-                        }
-                    }
-                    navigation(
-                        startDestination = "weather",
-                        route = "main"
-                    ) {
-
-                        composable("profile") {
-                            Surface(
-                                modifier = Modifier.fillMaxSize(),
-                                color = MaterialTheme.colorScheme.background
-                            ) {
-                                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-
-                                Scaffold(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .nestedScroll(scrollBehavior.nestedScrollConnection),
-                                    topBar = {
-                                        NavigationBar(
-                                            navController = navController,
-                                            scrollBehavior = scrollBehavior
-                                        )
-                                    }
-                                ) { values ->
+                            composable("profile") {
+                                Surface(
+                                    modifier = Modifier.fillMaxSize(),
+                                    color = MaterialTheme.colorScheme.background
+                                ) {
                                     ProfileScreen(
                                         userData = firebaseAuthManager.getSignedInUser(),
                                         onSignOut = {
@@ -334,8 +364,7 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onNavigateToFinderUI = {
                                             navController.navigate("missing_persons")
-                                        },
-                                        modifier = Modifier.padding(values)
+                                        }
                                     )
                                 }
                             }
@@ -487,6 +516,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+sealed class Screen(val route: String, @StringRes val resourceId: Int) {
+    data object Auth : Screen("auth", R.string.auth_nav_resource)
+    data object Main : Screen("main", R.string.main_nav_resource)
+    data object Loading : Screen("loading", R.string.loading_nav_resource)
+}
+
 
 @Composable
 inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(navController: NavController): T {
@@ -503,3 +538,4 @@ fun Activity.openAppSettings() {
         Uri.fromParts("package", packageName, null)
     ).also(::startActivity)
 }
+
