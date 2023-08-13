@@ -21,10 +21,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -62,6 +69,7 @@ import dev.easysouls.tracetrail.presentation.TopNavigationBar
 import dev.easysouls.tracetrail.presentation.PermissionDialog
 import dev.easysouls.tracetrail.presentation.PostNotificationsTextProvider
 import dev.easysouls.tracetrail.presentation.finder.FinderUI
+import dev.easysouls.tracetrail.presentation.map.MapEvent
 import dev.easysouls.tracetrail.presentation.map.MapScreen
 import dev.easysouls.tracetrail.presentation.map.MapViewModel
 import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
@@ -132,6 +140,8 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val navController = rememberNavController()
+                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+                val snackbarHostState = remember { SnackbarHostState() }
 
                 LaunchedEffect(key1 = Unit) {
                     if (firebaseAuthManager.getSignedInUser() != null) {
@@ -155,9 +165,11 @@ class MainActivity : ComponentActivity() {
                     Screen.Loading
                 )
 
-                val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+                // TODO: Make my own FAB component which accepts the view model and the current location
+                // TODO: Then set its action from within
 
                 Scaffold(
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
                     topBar = {
                         TopNavigationBar(
                             navController = navController,
@@ -177,19 +189,6 @@ class MainActivity : ComponentActivity() {
 
                         //Only for displaying the loading screen while the app loads
                         composable(Screen.Loading.route) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                CircularProgressBar(
-                                    percentage = 1f,
-                                    maxNumber = 100
-                                )
-                            }
-                        }
-
-                        // Only for displaying the loading screen while the app loads
-                        composable("loading") {
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.fillMaxSize()
@@ -336,7 +335,7 @@ class MainActivity : ComponentActivity() {
 
                         navigation(
                             startDestination = "map",
-                            route = "main"
+                            route = Screen.Main.route
                         ) {
 
                             composable("profile") {
@@ -368,145 +367,152 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
                             }
-                        }
 
-                        composable("missing_persons") {
-                            val missingPersons by remember {
-                                mutableStateOf(listOf<MissingPerson>())
+                            composable("missing_persons") {
+                                val missingPersons by remember {
+                                    mutableStateOf(listOf<MissingPerson>())
+                                }
+                                FinderUI(missingPersons)
                             }
-                            FinderUI(missingPersons)
-                        }
 
-                        composable("map") {
-                            val viewModel = hiltViewModel<MapViewModel>()
-                            val dialogQueue = viewModel.visiblePermissionDialogQueue
+                            composable("map") {
+                                val viewModel = hiltViewModel<MapViewModel>()
+                                val dialogQueue = viewModel.visiblePermissionDialogQueue
 
-
-                            /*val coarseLocationPermissionResultLauncher =
-                                rememberLauncherForActivityResult(
-                                    contract = ActivityResultContracts.RequestPermission(),
-                                    onResult = { isGranted ->
-                                        viewModel.onPermissionResult(
-                                            permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                                            isGranted = isGranted
+                                /*floatingActionButton = {
+                                    FloatingActionButton(onClick = {
+                                        viewModel.onEvent(MapEvent.ToggleMapStyle)
+                                    }) {
+                                        Icon(
+                                            imageVector = if (viewModel.state.isStyledMap) {
+                                                Icons.Default.KeyboardArrowRight
+                                            } else Icons.Default.KeyboardArrowLeft,
+                                            contentDescription = "Toggle Fallout map"
                                         )
                                     }
-                                )*/
+                                }*/
 
-                            val multiplePermissionResultLauncher =
-                                rememberLauncherForActivityResult(
-                                    contract = ActivityResultContracts.RequestMultiplePermissions(),
-                                    onResult = { perms ->
-                                        perms.keys.forEach { permission ->
+                                /*val coarseLocationPermissionResultLauncher =
+                                    rememberLauncherForActivityResult(
+                                        contract = ActivityResultContracts.RequestPermission(),
+                                        onResult = { isGranted ->
                                             viewModel.onPermissionResult(
-                                                permission = permission,
-                                                isGranted = perms[permission] == true
+                                                permission = Manifest.permission.ACCESS_COARSE_LOCATION,
+                                                isGranted = isGranted
                                             )
                                         }
-                                    }
-                                )
+                                    )*/
 
-                            LaunchedEffect(key1 = multiplePermissionResultLauncher) {
-                                multiplePermissionResultLauncher.launch(permissionsToRequest)
-                            }
-
-                            /*coarseLocationPermissionResultLauncher.launch(
-                                Manifest.permission.ACCESS_COARSE_LOCATION
-                            )*/
-
-
-                            MapScreen(navController, viewModel)
-
-                            /*Column(
-                                modifier = Modifier.fillMaxSize(),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Button(onClick = {
-                                    coarseLocationPermissionResultLauncher.launch(
-                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                val multiplePermissionResultLauncher =
+                                    rememberLauncherForActivityResult(
+                                        contract = ActivityResultContracts.RequestMultiplePermissions(),
+                                        onResult = { perms ->
+                                            perms.keys.forEach { permission ->
+                                                viewModel.onPermissionResult(
+                                                    permission = permission,
+                                                    isGranted = perms[permission] == true
+                                                )
+                                            }
+                                        }
                                     )
-                                }) {
-                                    Text(text = "Request one permission")
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Button(onClick = {
+
+                                LaunchedEffect(key1 = multiplePermissionResultLauncher) {
                                     multiplePermissionResultLauncher.launch(permissionsToRequest)
-                                }) {
-                                    Text(text = "Request multiple permissions")
                                 }
-                            }*/
 
-                            dialogQueue
-                                .reversed()
-                                .forEach { permission ->
-                                    PermissionDialog(
-                                        permissionTextProvider = when (permission) {
-                                            Manifest.permission.ACCESS_COARSE_LOCATION -> CoarseLocationTextProvider()
-                                            Manifest.permission.ACCESS_FINE_LOCATION -> FineLocationTextProvider()
-                                            Manifest.permission.POST_NOTIFICATIONS -> PostNotificationsTextProvider()
-                                            else -> return@forEach
-                                        },
-                                        isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
-                                            permission
-                                        ),
-                                        onDismiss = viewModel::dismissDialog,
-                                        onOkayClick = {
-                                            viewModel.dismissDialog()
-                                            multiplePermissionResultLauncher.launch(
-                                                arrayOf(permission)
-                                            )
-                                        },
-                                        onGoToAppSettingsClick = { openAppSettings() }
+                                MapScreen(viewModel)
+
+                                /*Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Button(onClick = {
+                                        coarseLocationPermissionResultLauncher.launch(
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    }) {
+                                        Text(text = "Request one permission")
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(onClick = {
+                                        multiplePermissionResultLauncher.launch(permissionsToRequest)
+                                    }) {
+                                        Text(text = "Request multiple permissions")
+                                    }
+                                }*/
+
+                                dialogQueue
+                                    .reversed()
+                                    .forEach { permission ->
+                                        PermissionDialog(
+                                            permissionTextProvider = when (permission) {
+                                                Manifest.permission.ACCESS_COARSE_LOCATION -> CoarseLocationTextProvider()
+                                                Manifest.permission.ACCESS_FINE_LOCATION -> FineLocationTextProvider()
+                                                Manifest.permission.POST_NOTIFICATIONS -> PostNotificationsTextProvider()
+                                                else -> return@forEach
+                                            },
+                                            isPermanentlyDeclined = !shouldShowRequestPermissionRationale(
+                                                permission
+                                            ),
+                                            onDismiss = viewModel::dismissDialog,
+                                            onOkayClick = {
+                                                viewModel.dismissDialog()
+                                                multiplePermissionResultLauncher.launch(
+                                                    arrayOf(permission)
+                                                )
+                                            },
+                                            onGoToAppSettingsClick = { openAppSettings() }
+                                        )
+                                    }
+                            }
+
+                            composable("test") {
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Button(onClick = {
+                                        Intent(applicationContext, NavigationService::class.java).also {
+                                            it.action = NavigationService.Actions.START.toString()
+                                            startService(it)
+                                        }
+                                    }) {
+                                        Text("Start service")
+                                    }
+                                    Button(onClick = {
+                                        Intent(applicationContext, NavigationService::class.java).also {
+                                            it.action = NavigationService.Actions.STOP.toString()
+                                            startService(it)
+                                        }
+                                    }) {
+                                        Text("Stop service")
+                                    }
+                                }
+                            }
+
+                            composable("weather") {
+                                val viewModel: WeatherViewModel by hiltViewModel()
+                                val permissionLauncher = registerForActivityResult(
+                                    ActivityResultContracts.RequestMultiplePermissions()
+                                ) {
+                                    viewModel.loadWeatherInfo()
+                                }
+                                permissionLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                                        Manifest.permission.ACCESS_FINE_LOCATION
                                     )
-                                }
-                        }
-
-                        composable("test") {
-                            Column(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                Button(onClick = {
-                                    Intent(applicationContext, NavigationService::class.java).also {
-                                        it.action = NavigationService.Actions.START.toString()
-                                        startService(it)
-                                    }
-                                }) {
-                                    Text("Start service")
-                                }
-                                Button(onClick = {
-                                    Intent(applicationContext, NavigationService::class.java).also {
-                                        it.action = NavigationService.Actions.STOP.toString()
-                                        startService(it)
-                                    }
-                                }) {
-                                    Text("Stop service")
-                                }
-                            }
-                        }
-
-                        composable("weather") {
-                            val viewModel: WeatherViewModel by hiltViewModel()
-                            val permissionLauncher = registerForActivityResult(
-                                ActivityResultContracts.RequestMultiplePermissions()
-                            ) {
-                                viewModel.loadWeatherInfo()
-                            }
-                            permissionLauncher.launch(
-                                arrayOf(
-                                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                                    Manifest.permission.ACCESS_FINE_LOCATION
                                 )
-                            )
 
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(DarkBlue)
-                            ) {
-                                WeatherCart(state = viewModel.state, backgroundColor = DeepBlue)
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(DarkBlue)
+                                ) {
+                                    WeatherCart(state = viewModel.state, backgroundColor = DeepBlue)
+                                }
                             }
                         }
                     }

@@ -2,19 +2,10 @@ package dev.easysouls.tracetrail.presentation.map
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
+import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -23,16 +14,12 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import dev.easysouls.tracetrail.presentation.TopNavigationBar
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
-    navController: NavHostController,
     viewModel: MapViewModel
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
     val uiSettings = remember {
         MapUiSettings(zoomControlsEnabled = false)
     }
@@ -46,29 +33,10 @@ fun MapScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = {
-                viewModel.onEvent(MapEvent.ToggleMapStyle)
-            }) {
-                Icon(
-                    imageVector = if (viewModel.state.isStyledMap) {
-                        Icons.Default.KeyboardArrowRight
-                    } else Icons.Default.KeyboardArrowLeft,
-                    contentDescription = "Toggle Fallout map"
-                )
-            }
-        },
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopNavigationBar(navController = navController)
-        }
-    ) { values ->
         GoogleMap(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(values),
+                .padding(4.dp),
             cameraPositionState = cameraPositionState,
             properties = viewModel.state.properties,
             uiSettings = uiSettings,
@@ -96,5 +64,5 @@ fun MapScreen(
                 )
             }
         }
-    }
+
 }
