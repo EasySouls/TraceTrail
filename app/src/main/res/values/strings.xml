@@ -7,7 +7,11 @@
     <string name="validation_letters_digits_password_error">The password needs to contain at least one digit and one letter</string>
     <string name="validation_passwords_dont_match_error">The passwords don\'t match</string>
     <string name="validation_terms_not_accepted_error">Please accept the terms</string>
-    <string name="auth_nav_resource">auth</string>
-    <string name="main_nav_resource">main</string>
-    <string name="loading_nav_resource">loading</string>
+    <string name="auth_nav_resource">Auth screen</string>
+    <string name="main_nav_resource">Main screen</string>
+    <string name="home_nav_resource">Home Screen</string>
+    <string name="loading_nav_resource">Loading screen</string>
+    <string name="map_nav_resource">Map screen</string>
+    <string name="profile_nav_resource">Profile screen</string>
+    <string name="settings_nav_resource">Settings screen</string>
 </resources>

@@ -2,10 +2,15 @@ package dev.easysouls.tracetrail.presentation.map
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -32,11 +37,26 @@ fun MapScreen(
             CameraPosition.fromLatLngZoom(budapest, 10f)
         }
     }
-
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    viewModel.onEvent(MapEvent.ToggleMapStyle)
+                },
+                ) {
+                Icon(
+                    imageVector = if (viewModel.state.isStyledMap) {
+                        Icons.Default.KeyboardArrowRight
+                    } else Icons.Default.KeyboardArrowLeft,
+                    contentDescription = "Toggle Fallout map"
+                )
+            }
+        }
+    ) { values ->
         GoogleMap(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(4.dp),
+                .padding(values),
             cameraPositionState = cameraPositionState,
             properties = viewModel.state.properties,
             uiSettings = uiSettings,
@@ -64,5 +84,5 @@ fun MapScreen(
                 )
             }
         }
-
+    }
 }

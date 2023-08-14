@@ -22,12 +22,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -40,9 +44,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -65,11 +70,10 @@ import dev.easysouls.tracetrail.presentation.BottomNavigationBar
 import dev.easysouls.tracetrail.presentation.CircularProgressBar
 import dev.easysouls.tracetrail.presentation.CoarseLocationTextProvider
 import dev.easysouls.tracetrail.presentation.FineLocationTextProvider
-import dev.easysouls.tracetrail.presentation.TopNavigationBar
 import dev.easysouls.tracetrail.presentation.PermissionDialog
 import dev.easysouls.tracetrail.presentation.PostNotificationsTextProvider
+import dev.easysouls.tracetrail.presentation.TopNavigationBar
 import dev.easysouls.tracetrail.presentation.finder.FinderUI
-import dev.easysouls.tracetrail.presentation.map.MapEvent
 import dev.easysouls.tracetrail.presentation.map.MapScreen
 import dev.easysouls.tracetrail.presentation.map.MapViewModel
 import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
@@ -85,7 +89,7 @@ import dev.easysouls.tracetrail.ui.theme.DeepBlue
 import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
 import kotlinx.coroutines.launch
 
-private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
+// private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
 
 @AndroidEntryPoint
 @OptIn(ExperimentalMaterial3Api::class)
@@ -145,28 +149,55 @@ class MainActivity : ComponentActivity() {
 
                 LaunchedEffect(key1 = Unit) {
                     if (firebaseAuthManager.getSignedInUser() != null) {
-                        navController.navigate("main") {
-                            popUpTo("loading") {
+                        navController.navigate(Screen.Main.route) {
+                            popUpTo(Screen.Loading.route) {
                                 inclusive = true
                             }
                         }
                     } else {
-                        navController.navigate("auth") {
-                            popUpTo("loading") {
+                        navController.navigate(Screen.Auth.route) {
+                            popUpTo(Screen.Loading.route) {
                                 inclusive = true
                             }
                         }
                     }
                 }
 
-                val navigationItems = listOf(
-                    Screen.Auth,
-                    Screen.Main,
-                    Screen.Loading
-                )
-
-                // TODO: Make my own FAB component which accepts the view model and the current location
-                // TODO: Then set its action from within
+                // TODO: Make the badge reactive
+                val navigationItems = remember {
+                    listOf(
+                        BottomNavigationItem(
+                            title = "Home",
+                            destScreen = Screen.Home,
+                            selectedIcon = Icons.Filled.Home,
+                            unselectedIcon = Icons.Outlined.Home,
+                            hasNews = false
+                        ),
+                        BottomNavigationItem(
+                            title = "Map",
+                            destScreen = Screen.Map,
+                            selectedIcon = Icons.Filled.LocationOn,
+                            unselectedIcon = Icons.Outlined.LocationOn,
+                            hasNews = true
+                        ),
+                        BottomNavigationItem(
+                            title = "Profile",
+                            destScreen = Screen.Profile,
+                            selectedIcon = Icons.Filled.AccountCircle,
+                            unselectedIcon = Icons.Outlined.AccountCircle,
+                            hasNews = false,
+                            badgeCount = 4
+                        ),
+                        BottomNavigationItem(
+                            title = "Settings",
+                            destScreen = Screen.Settings,
+                            selectedIcon = Icons.Filled.Settings,
+                            unselectedIcon = Icons.Outlined.Settings,
+                            hasNews = true,
+                            badgeCount = 23
+                        )
+                    )
+                }
 
                 Scaffold(
                     snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -180,7 +211,8 @@ class MainActivity : ComponentActivity() {
                         BottomNavigationBar(
                             navController = navController, navItems = navigationItems
                         )
-                    }) { innerPadding ->
+                    },
+                ) { innerPadding ->
                     NavHost(
                         navController = navController,
                         startDestination = Screen.Loading.route,
@@ -232,8 +264,8 @@ class MainActivity : ComponentActivity() {
                                             Toast.LENGTH_LONG
                                         ).show()
 
-                                        navController.navigate("main") {
-                                            popUpTo("auth") {
+                                        navController.navigate(Screen.Main.route) {
+                                            popUpTo(Screen.Auth.route) {
                                                 inclusive = true
                                             }
                                         }
@@ -335,7 +367,7 @@ class MainActivity : ComponentActivity() {
 
                         navigation(
                             startDestination = "map",
-                            route = Screen.Main.route
+                            route = Screen.Home.route
                         ) {
 
                             composable("profile") {
@@ -378,19 +410,6 @@ class MainActivity : ComponentActivity() {
                             composable("map") {
                                 val viewModel = hiltViewModel<MapViewModel>()
                                 val dialogQueue = viewModel.visiblePermissionDialogQueue
-
-                                /*floatingActionButton = {
-                                    FloatingActionButton(onClick = {
-                                        viewModel.onEvent(MapEvent.ToggleMapStyle)
-                                    }) {
-                                        Icon(
-                                            imageVector = if (viewModel.state.isStyledMap) {
-                                                Icons.Default.KeyboardArrowRight
-                                            } else Icons.Default.KeyboardArrowLeft,
-                                            contentDescription = "Toggle Fallout map"
-                                        )
-                                    }
-                                }*/
 
                                 /*val coarseLocationPermissionResultLauncher =
                                     rememberLauncherForActivityResult(
@@ -474,7 +493,10 @@ class MainActivity : ComponentActivity() {
                                     verticalArrangement = Arrangement.Center
                                 ) {
                                     Button(onClick = {
-                                        Intent(applicationContext, NavigationService::class.java).also {
+                                        Intent(
+                                            applicationContext,
+                                            NavigationService::class.java
+                                        ).also {
                                             it.action = NavigationService.Actions.START.toString()
                                             startService(it)
                                         }
@@ -482,7 +504,10 @@ class MainActivity : ComponentActivity() {
                                         Text("Start service")
                                     }
                                     Button(onClick = {
-                                        Intent(applicationContext, NavigationService::class.java).also {
+                                        Intent(
+                                            applicationContext,
+                                            NavigationService::class.java
+                                        ).also {
                                             it.action = NavigationService.Actions.STOP.toString()
                                             startService(it)
                                         }
@@ -493,7 +518,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable("weather") {
-                                val viewModel: WeatherViewModel by hiltViewModel()
+                                val viewModel: WeatherViewModel = hiltViewModel()
                                 val permissionLauncher = registerForActivityResult(
                                     ActivityResultContracts.RequestMultiplePermissions()
                                 ) {
@@ -524,10 +549,22 @@ class MainActivity : ComponentActivity() {
 
 sealed class Screen(val route: String, @StringRes val resourceId: Int) {
     data object Auth : Screen("auth", R.string.auth_nav_resource)
-    data object Main : Screen("main", R.string.main_nav_resource)
+    data object Main : Screen("auth", R.string.main_nav_resource)
+    data object Home : Screen("home", R.string.home_nav_resource)
+    data object Map : Screen("map", R.string.map_nav_resource)
+    data object Profile : Screen("profile", R.string.profile_nav_resource)
     data object Loading : Screen("loading", R.string.loading_nav_resource)
+    data object Settings : Screen("settings", R.string.settings_nav_resource)
 }
 
+data class BottomNavigationItem(
+    val title: String,
+    val destScreen: Screen,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
+    val hasNews: Boolean,
+    val badgeCount: Int? = null
+)
 
 @Composable
 inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(navController: NavController): T {

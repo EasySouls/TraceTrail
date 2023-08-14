@@ -12,7 +12,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import dev.easysouls.tracetrail.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,13 +23,22 @@ fun TopNavigationBar(
     navController: NavHostController,
     scrollBehavior: TopAppBarScrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 ) {
+    val currentBackStackEntry = navController.currentBackStackEntryAsState().value
+    val currentDestinationAsString = currentBackStackEntry?.destination?.route
+
     TopAppBar(
         title = {
-            Text(text = "Profile")
+            currentDestinationAsString?.let {
+                Text(
+                    modifier = Modifier,
+                    text = it
+                )
+            }
         },
         navigationIcon = {
             IconButton(onClick = {
                 navController.navigateUp()
+                // navController.popBackStack()
             }) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,

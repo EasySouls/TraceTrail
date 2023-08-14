@@ -1,37 +1,43 @@
 package dev.easysouls.tracetrail.presentation
 
-import android.annotation.SuppressLint
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import dev.easysouls.tracetrail.MainActivity
-import dev.easysouls.tracetrail.R
-import dev.easysouls.tracetrail.Screen
+import dev.easysouls.tracetrail.BottomNavigationItem
 
-@SuppressLint("ResourceType")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomNavigationBar(
     navController: NavHostController,
-    navItems: List<Screen>,
+    navItems: List<BottomNavigationItem>,
     modifier: Modifier = Modifier
-    ) {
+) {
+    var selectedItemIndex by rememberSaveable {
+        mutableIntStateOf(0)
+    }
+
     BottomAppBar(
         modifier = modifier
     ) {
-        val currentRoute = navController.currentBackStackEntry?.destination?.route
-        navItems.forEach { screen ->
-            val isSelected = currentRoute == screen.route
-            IconButton(
+        // val currentRoute = navController.currentBackStackEntry?.destination?.route
+        navItems.forEachIndexed { index, item ->
+            NavigationBarItem(
+                selected = selectedItemIndex == index,
                 onClick = {
-                    navController.navigate(screen.route) {
+                    selectedItemIndex = index
+                    navController.navigate(item.destScreen.route) {
                         // Pop up to the start destination of the graph to
                         // avoid building up a large stack of destinations
                         // on the back stack as users select items
@@ -45,14 +51,29 @@ fun BottomNavigationBar(
                         restoreState = true
                     }
                 },
-                content = {
-                    Icon(
-                        // TODO: make this screen.resourceId
-                        painter = painterResource(id = R.drawable.ic_play),
-                        contentDescription = screen.route,
-                        tint = if (isSelected) Color.White else Color.Gray
-                    )
-                }
+                icon = {
+                    BadgedBox(
+                        badge = {
+                            if (item.badgeCount != null) {
+                                Badge {
+                                    Text(text = item.badgeCount.toString())
+                                }
+                            } else if (item.hasNews) {
+                                Badge()
+                            }
+                        }) {
+                        Icon(
+                            imageVector = if (index == selectedItemIndex) {
+                                item.selectedIcon
+                            } else item.unselectedIcon,
+                            contentDescription = item.title
+                        )
+                    }
+                },
+                label = {
+                    Text(text = item.title)
+                },
+                alwaysShowLabel = true
             )
         }
     }
