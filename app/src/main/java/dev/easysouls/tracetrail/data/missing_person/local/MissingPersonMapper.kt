@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.data.local
+package dev.easysouls.tracetrail.data.missing_person.local
 
 import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 

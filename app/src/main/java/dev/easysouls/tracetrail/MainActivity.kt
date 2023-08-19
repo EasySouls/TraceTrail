@@ -44,7 +44,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -55,7 +54,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -64,6 +62,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.AndroidEntryPoint
+import dev.easysouls.tracetrail.domain.PermissionHandler
 import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 import dev.easysouls.tracetrail.domain.services.NavigationService
 import dev.easysouls.tracetrail.presentation.BottomNavigationBar
@@ -74,8 +73,8 @@ import dev.easysouls.tracetrail.presentation.PermissionDialog
 import dev.easysouls.tracetrail.presentation.PostNotificationsTextProvider
 import dev.easysouls.tracetrail.presentation.TopNavigationBar
 import dev.easysouls.tracetrail.presentation.finder.FinderUI
+import dev.easysouls.tracetrail.presentation.map.FinderViewModel
 import dev.easysouls.tracetrail.presentation.map.MapScreen
-import dev.easysouls.tracetrail.presentation.map.MapViewModel
 import dev.easysouls.tracetrail.presentation.profile.ProfileScreen
 import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthManager
 import dev.easysouls.tracetrail.presentation.sign_in.FirebaseAuthViewModel
@@ -90,6 +89,15 @@ import dev.easysouls.tracetrail.ui.theme.TraceTrailTheme
 import kotlinx.coroutines.launch
 
 // private const val MAPS_API_KEY = BuildConfig.MAPS_API_KEY
+
+data class BottomNavigationItem(
+    val title: String,
+    val destScreen: Screen,
+    val selectedIcon: ImageVector,
+    val unselectedIcon: ImageVector,
+    val hasNews: Boolean,
+    val badgeCount: Int? = null
+)
 
 @AndroidEntryPoint
 @OptIn(ExperimentalMaterial3Api::class)
@@ -299,7 +307,7 @@ class MainActivity : ComponentActivity() {
                                         Toast.makeText(
                                             applicationContext,
                                             "Sign in successful",
-                                            Toast.LENGTH_LONG
+                                            Toast.LENGTH_SHORT
                                         ).show()
 
                                         navController.navigate("main") {
@@ -335,12 +343,12 @@ class MainActivity : ComponentActivity() {
                                     if (signInState.isSignInSuccessful) {
                                         Toast.makeText(
                                             applicationContext,
-                                            "Sign in successful",
-                                            Toast.LENGTH_LONG
+                                            "Login successful",
+                                            Toast.LENGTH_SHORT
                                         ).show()
 
-                                        navController.navigate("main") {
-                                            popUpTo("auth") {
+                                        navController.navigate(Screen.Main.route) {
+                                            popUpTo(Screen.Auth.route) {
                                                 inclusive = true
                                             }
                                         }
@@ -369,7 +377,6 @@ class MainActivity : ComponentActivity() {
                             startDestination = "map",
                             route = Screen.Home.route
                         ) {
-
                             composable("profile") {
                                 Surface(
                                     modifier = Modifier.fillMaxSize(),
@@ -408,7 +415,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable("map") {
-                                val viewModel = hiltViewModel<MapViewModel>()
+                                val viewModel = hiltViewModel<FinderViewModel>()
                                 val dialogQueue = viewModel.visiblePermissionDialogQueue
 
                                 /*val coarseLocationPermissionResultLauncher =
@@ -439,7 +446,11 @@ class MainActivity : ComponentActivity() {
                                     multiplePermissionResultLauncher.launch(permissionsToRequest)
                                 }
 
-                                MapScreen(viewModel)
+                                MapScreen(
+                                    currentLocationState = viewModel.currentLocationState,
+                                    mapState = viewModel.mapState,
+                                    onEvent = viewModel::onEvent
+                                )
 
                                 /*Column(
                                     modifier = Modifier.fillMaxSize(),
@@ -486,7 +497,7 @@ class MainActivity : ComponentActivity() {
                                     }
                             }
 
-                            composable("test") {
+                            composable("service_test") {
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
                                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -517,7 +528,13 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            composable("weather") {
+
+                        }
+                        navigation(
+                            route = "weather",
+                            startDestination = "weather_screen"
+                        ) {
+                            composable("weather_screen") {
                                 val viewModel: WeatherViewModel = hiltViewModel()
                                 val permissionLauncher = registerForActivityResult(
                                     ActivityResultContracts.RequestMultiplePermissions()
@@ -557,22 +574,13 @@ sealed class Screen(val route: String, @StringRes val resourceId: Int) {
     data object Settings : Screen("settings", R.string.settings_nav_resource)
 }
 
-data class BottomNavigationItem(
-    val title: String,
-    val destScreen: Screen,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-    val hasNews: Boolean,
-    val badgeCount: Int? = null
-)
-
 @Composable
 inline fun <reified T : ViewModel> NavBackStackEntry.sharedViewModel(navController: NavController): T {
-    val navGraphRoute = destination.parent?.route ?: return viewModel()
+    val navGraphRoute = destination.parent?.route ?: return hiltViewModel()
     val parentEntry = remember(this) {
         navController.getBackStackEntry(navGraphRoute)
     }
-    return viewModel(parentEntry)
+    return hiltViewModel(parentEntry)
 }
 
 fun Activity.openAppSettings() {

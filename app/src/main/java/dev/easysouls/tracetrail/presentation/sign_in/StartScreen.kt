@@ -5,9 +5,18 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,9 +25,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import dev.easysouls.tracetrail.R
 
 @Composable
 fun StartScreen(
@@ -48,27 +56,53 @@ fun StartScreen(
             Button(
                 onClick = signInWithEmailAndPassword,
                 shape = RoundedCornerShape(2.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary),
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .padding(4.dp)
             ) {
                 Text(text = "Sign in with email")
-                Icon(painter = painterResource(R.drawable.ic_profile), contentDescription = "Sign in with email icon")
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(imageVector = Icons.Default.Email, contentDescription = "Sign in with email")
             }
             Button(
                 onClick = loginWithEmailAndPassword,
                 shape = RoundedCornerShape(2.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary),
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .padding(4.dp)
             ) {
                 Text(text = "Login")
-                Icon(painter = painterResource(R.drawable.ic_profile), contentDescription = "Log in with email icon")
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Log in with email")
             }
-            Button(
+            ElevatedButton(
                 onClick = signInWithGoogle,
                 shape = RoundedCornerShape(2.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSecondary),
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .padding(4.dp)
             ) {
                 Text(text = "Sign in with Google")
-                Icon(painter = painterResource(R.drawable.ic_profile), contentDescription = "Sign in with Google icon")
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(imageVector = Icons.Default.Place, contentDescription = "Sign in with Google")
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun StartScreenPreview() {
+    StartScreen(
+        state = SignInState(
+            isSignInSuccessful = false,
+            signInError = null
+        ),
+        signInWithEmailAndPassword = {},
+        loginWithEmailAndPassword = {},
+        signInWithGoogle = {}
+    )
 }

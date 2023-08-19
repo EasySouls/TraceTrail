@@ -38,13 +38,15 @@ class FirebaseAuthViewModel(
     }
 
     var loginFormState by mutableStateOf(LoginFormState())
+        private set
 
     var registrationFormState by mutableStateOf(RegistrationFormState())
+        private set
 
     private val validationEventChannel = Channel<ValidationEvent>()
     val validationEvents = validationEventChannel.receiveAsFlow()
 
-    fun onEvent(event: RegistrationFormEvent) {
+    fun onRegistrationEvent(event: RegistrationFormEvent) {
         when (event) {
             is RegistrationFormEvent.EmailChanged -> {
                 registrationFormState = registrationFormState.copy(email = event.email)
@@ -59,12 +61,26 @@ class FirebaseAuthViewModel(
                 registrationFormState = registrationFormState.copy(acceptedTerms = event.isAccepted)
             }
             is RegistrationFormEvent.Submit -> {
-                submitData()
+                submitRegistrationData()
             }
         }
     }
 
-    private fun submitData() {
+    fun onLoginEvent(event: LoginFormEvent) {
+        when (event) {
+            is LoginFormEvent.EmailChanged -> {
+                loginFormState = loginFormState.copy(email = event.email)
+            }
+            is LoginFormEvent.PasswordChanged -> {
+                loginFormState = loginFormState.copy(password = event.password)
+            }
+            is LoginFormEvent.Submit -> {
+                submitLoginData()
+            }
+        }
+    }
+
+    private fun submitRegistrationData() {
         val emailResult = validateEmail.execute(registrationFormState.email)
         val passwordResult = validatePassword.execute(registrationFormState.password)
         val repeatedPasswordResult = validateRepeatedPassword.execute(
@@ -93,7 +109,16 @@ class FirebaseAuthViewModel(
         }
     }
 
+    private fun submitLoginData() {
+        //TODO check whether the user could sign in
+
+        viewModelScope.launch {
+            validationEventChannel.send(ValidationEvent.Success)
+        }
+    }
+
     sealed class ValidationEvent {
         data object Success: ValidationEvent()
+        data class Failure(val message: String): ValidationEvent()
     }
 }

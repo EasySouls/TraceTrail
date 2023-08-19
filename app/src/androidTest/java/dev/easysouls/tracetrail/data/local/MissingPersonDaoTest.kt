@@ -4,6 +4,9 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.common.truth.Truth.assertThat
+import dev.easysouls.tracetrail.data.missing_person.local.MissingPersonDao
+import dev.easysouls.tracetrail.data.missing_person.local.MissingPersonDatabase
+import dev.easysouls.tracetrail.data.missing_person.local.MissingPersonEntity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

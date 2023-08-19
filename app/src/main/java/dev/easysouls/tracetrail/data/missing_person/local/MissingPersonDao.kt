@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.data.local
+package dev.easysouls.tracetrail.data.missing_person.local
 
 import androidx.room.Dao
 import androidx.room.Delete

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.easysouls.tracetrail.domain.PermissionHandler
 import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 import dev.easysouls.tracetrail.domain.missing_person.repository.MissingPersonRepository
 import kotlinx.coroutines.Dispatchers
@@ -17,20 +18,23 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MapViewModel @Inject constructor(
-    private val repository: MissingPersonRepository
+class FinderViewModel @Inject constructor(
+    private val repository: MissingPersonRepository,
+    private val permissionHandler: PermissionHandler
 ): ViewModel() {
 
-    var currentLocation by mutableStateOf<LatLng?>(null)
+    var currentLocationState by mutableStateOf<LatLng?>(null)
+        private set
 
-    var state by mutableStateOf(MapState())
+    var mapState by mutableStateOf(MapState())
+        private set
 
     val visiblePermissionDialogQueue = mutableStateListOf<String>()
 
     init {
         viewModelScope.launch {
             repository.getMissingPersons().collectLatest { persons ->
-                state = state.copy(
+                mapState = mapState.copy(
                     missingPersons = persons
                 )
             }
@@ -40,13 +44,13 @@ class MapViewModel @Inject constructor(
     fun onEvent(event: MapEvent) {
         when (event) {
             is MapEvent.ToggleMapStyle -> {
-                state = state.copy(
-                    properties = state.properties.copy(
-                        mapStyleOptions = if (state.isStyledMap) {
+                mapState = mapState.copy(
+                    properties = mapState.properties.copy(
+                        mapStyleOptions = if (mapState.isStyledMap) {
                             null
                         } else MapStyleOptions(MapStyle.json)
                     ),
-                    isStyledMap = !state.isStyledMap
+                    isStyledMap = !mapState.isStyledMap
                 )
             }
             is MapEvent.OnInfoWindowLongClick -> {

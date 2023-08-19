@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -23,7 +24,9 @@ import com.google.maps.android.compose.rememberCameraPositionState
 
 @Composable
 fun MapScreen(
-    viewModel: MapViewModel
+    currentLocationState: LatLng?,
+    mapState: MapState,
+    onEvent: (MapEvent) -> Unit
 ) {
     val uiSettings = remember {
         MapUiSettings(zoomControlsEnabled = false)
@@ -31,8 +34,8 @@ fun MapScreen(
 
     val budapest = LatLng(47.526642, 19.046394)
     val cameraPositionState = rememberCameraPositionState {
-        position = if (viewModel.currentLocation != null) {
-            CameraPosition.fromLatLngZoom(viewModel.currentLocation!!, 10f)
+        position = if (currentLocationState != null) {
+            CameraPosition.fromLatLngZoom(currentLocationState, 10f)
         } else {
             CameraPosition.fromLatLngZoom(budapest, 10f)
         }
@@ -41,11 +44,11 @@ fun MapScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.onEvent(MapEvent.ToggleMapStyle)
+                    onEvent(MapEvent.ToggleMapStyle)
                 },
                 ) {
                 Icon(
-                    imageVector = if (viewModel.state.isStyledMap) {
+                    imageVector = if (mapState.isStyledMap) {
                         Icons.Default.KeyboardArrowRight
                     } else Icons.Default.KeyboardArrowLeft,
                     contentDescription = "Toggle Fallout map"
@@ -58,13 +61,13 @@ fun MapScreen(
                 .fillMaxSize()
                 .padding(values),
             cameraPositionState = cameraPositionState,
-            properties = viewModel.state.properties,
+            properties = mapState.properties,
             uiSettings = uiSettings,
             onMapLongClick = {
-                viewModel.onEvent(MapEvent.OnMapLongClick(it))
+                onEvent(MapEvent.OnMapLongClick(it))
             }
         ) {
-            viewModel.state.missingPersons.forEach { person ->
+            mapState.missingPersons.forEach { person ->
                 Marker(
                     state = MarkerState(LatLng(person.lat, person.lng)),
                     title = "Missing Person (${person.lat}, ${person.lng})",
@@ -74,7 +77,7 @@ fun MapScreen(
                         true
                     },
                     onInfoWindowLongClick = {
-                        viewModel.onEvent(
+                        onEvent(
                             MapEvent.OnInfoWindowLongClick(person)
                         )
                     },
@@ -85,4 +88,14 @@ fun MapScreen(
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun MapScreenPreview() {
+    MapScreen(
+        currentLocationState = LatLng(30.0, 30.0),
+        mapState = MapState(),
+        onEvent = {}
+    )
 }

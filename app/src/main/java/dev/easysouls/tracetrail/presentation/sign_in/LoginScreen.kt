@@ -26,7 +26,7 @@ fun LoginScreen(
     loginUser: () -> Unit
 ) {
     val context = LocalContext.current
-    var state = viewModel.loginFormState
+    val state = viewModel.loginFormState
 
     LaunchedEffect(key1 = signInState.signInError) {
         signInState.signInError?.let { error ->
@@ -35,6 +35,18 @@ fun LoginScreen(
                 error,
                 Toast.LENGTH_LONG
             ).show()
+        }
+    }
+
+    LaunchedEffect(key1 = context) {
+        viewModel.validationEvents.collect { event ->
+            when (event) {
+                is FirebaseAuthViewModel.ValidationEvent.Success -> {
+                    loginUser()
+                }
+
+                is FirebaseAuthViewModel.ValidationEvent.Failure -> TODO()
+            }
         }
     }
 
@@ -49,7 +61,7 @@ fun LoginScreen(
         TextField(
             value = state.email,
             onValueChange = {
-                state = state.copy(email = it)
+                viewModel.onLoginEvent(LoginFormEvent.EmailChanged(it))
             },
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
@@ -63,7 +75,7 @@ fun LoginScreen(
         TextField(
             value = state.password,
             onValueChange = {
-                state = state.copy(password = it)
+                viewModel.onLoginEvent(LoginFormEvent.PasswordChanged(it))
             },
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
@@ -75,9 +87,11 @@ fun LoginScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Button(
-            onClick = { loginUser() },
+            onClick = {
+                viewModel.onLoginEvent(LoginFormEvent.Submit)
+            },
             modifier = Modifier.align(Alignment.Start)
-            ) {
+        ) {
             Text("Log in")
         }
     }

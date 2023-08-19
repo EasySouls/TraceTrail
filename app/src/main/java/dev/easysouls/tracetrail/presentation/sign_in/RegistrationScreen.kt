@@ -31,8 +31,8 @@ fun RegistrationScreen(
     signInState: SignInState,
     registerUser: () -> Unit
 ) {
-    val state = viewModel.registrationFormState
     val context = LocalContext.current
+    val state = viewModel.registrationFormState
 
     LaunchedEffect(key1 = signInState.signInError) {
         signInState.signInError?.let { error ->
@@ -50,6 +50,8 @@ fun RegistrationScreen(
                 is FirebaseAuthViewModel.ValidationEvent.Success -> {
                     registerUser()
                 }
+
+                is FirebaseAuthViewModel.ValidationEvent.Failure -> TODO()
             }
         }
     }
@@ -64,7 +66,7 @@ fun RegistrationScreen(
         TextField(
             value = state.email,
             onValueChange = {
-                viewModel.onEvent(RegistrationFormEvent.EmailChanged(it))
+                viewModel.onRegistrationEvent(RegistrationFormEvent.EmailChanged(it))
             },
             isError = state.emailError != null,
             modifier = Modifier.fillMaxWidth(),
@@ -88,7 +90,7 @@ fun RegistrationScreen(
         TextField(
             value = state.password,
             onValueChange = {
-                viewModel.onEvent(RegistrationFormEvent.PasswordChanged(it))
+                viewModel.onRegistrationEvent(RegistrationFormEvent.PasswordChanged(it))
             },
             isError = state.passwordError != null,
             modifier = Modifier.fillMaxWidth(),
@@ -113,7 +115,7 @@ fun RegistrationScreen(
         TextField(
             value = state.repeatedPassword,
             onValueChange = {
-                viewModel.onEvent(RegistrationFormEvent.RepeatedPasswordChanged(it))
+                viewModel.onRegistrationEvent(RegistrationFormEvent.RepeatedPasswordChanged(it))
             },
             isError = state.repeatedPasswordError != null,
             modifier = Modifier.fillMaxWidth(),
@@ -141,7 +143,7 @@ fun RegistrationScreen(
             Checkbox(
                 checked = state.acceptedTerms,
                 onCheckedChange = {
-                    viewModel.onEvent(RegistrationFormEvent.AcceptTerms(it))
+                    viewModel.onRegistrationEvent(RegistrationFormEvent.AcceptTerms(it))
                 }
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -154,7 +156,7 @@ fun RegistrationScreen(
             )
         }
         Button(onClick = {
-            viewModel.onEvent(RegistrationFormEvent.Submit)
+            viewModel.onRegistrationEvent(RegistrationFormEvent.Submit)
         },
             modifier = Modifier.align(Alignment.End)
         ) {

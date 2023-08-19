@@ -1,4 +1,4 @@
-package dev.easysouls.tracetrail.data.local
+package dev.easysouls.tracetrail.data.missing_person.local
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
