@@ -1,5 +1,6 @@
 package dev.easysouls.tracetrail.presentation.map
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -9,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.easysouls.tracetrail.domain.PermissionHandler
+import dev.easysouls.tracetrail.domain.location.LocationClient
 import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 import dev.easysouls.tracetrail.domain.missing_person.repository.MissingPersonRepository
 import kotlinx.coroutines.Dispatchers
@@ -20,14 +21,14 @@ import javax.inject.Inject
 @HiltViewModel
 class FinderViewModel @Inject constructor(
     private val repository: MissingPersonRepository,
-    private val permissionHandler: PermissionHandler
-): ViewModel() {
+) : ViewModel() {
 
     var currentLocationState by mutableStateOf<LatLng?>(null)
         private set
 
     var mapState by mutableStateOf(MapState())
         private set
+
 
     val visiblePermissionDialogQueue = mutableStateListOf<String>()
 
@@ -53,11 +54,13 @@ class FinderViewModel @Inject constructor(
                     isStyledMap = !mapState.isStyledMap
                 )
             }
+
             is MapEvent.OnInfoWindowLongClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     repository.deleteMissingPerson(event.person)
                 }
             }
+
             is MapEvent.OnMapLongClick -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     repository.insertMissingPerson(
@@ -78,8 +81,12 @@ class FinderViewModel @Inject constructor(
     }
 
     fun onPermissionResult(permission: String, isGranted: Boolean) {
-        if (!isGranted &&! visiblePermissionDialogQueue.contains(permission)) {
+        if (!isGranted && !visiblePermissionDialogQueue.contains(permission)) {
             visiblePermissionDialogQueue.add(permission)
         }
+    }
+
+    companion object {
+        private const val TAG = "FinderViewModel"
     }
 }

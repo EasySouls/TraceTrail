@@ -62,7 +62,6 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.identity.Identity
 import dagger.hilt.android.AndroidEntryPoint
-import dev.easysouls.tracetrail.domain.PermissionHandler
 import dev.easysouls.tracetrail.domain.missing_person.model.MissingPerson
 import dev.easysouls.tracetrail.domain.services.NavigationService
 import dev.easysouls.tracetrail.presentation.BottomNavigationBar
@@ -157,7 +156,7 @@ class MainActivity : ComponentActivity() {
 
                 LaunchedEffect(key1 = Unit) {
                     if (firebaseAuthManager.getSignedInUser() != null) {
-                        navController.navigate(Screen.Main.route) {
+                        navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Loading.route) {
                                 inclusive = true
                             }
@@ -310,8 +309,8 @@ class MainActivity : ComponentActivity() {
                                             Toast.LENGTH_SHORT
                                         ).show()
 
-                                        navController.navigate("main") {
-                                            popUpTo("auth") {
+                                        navController.navigate(Screen.Main.route) {
+                                            popUpTo(Screen.Auth.route) {
                                                 inclusive = true
                                             }
                                         }
@@ -347,7 +346,7 @@ class MainActivity : ComponentActivity() {
                                             Toast.LENGTH_SHORT
                                         ).show()
 
-                                        navController.navigate(Screen.Main.route) {
+                                        navController.navigate(Screen.Home.route) {
                                             popUpTo(Screen.Auth.route) {
                                                 inclusive = true
                                             }
@@ -374,39 +373,9 @@ class MainActivity : ComponentActivity() {
                         }
 
                         navigation(
-                            startDestination = "map",
+                            startDestination = "service_test",
                             route = Screen.Home.route
                         ) {
-                            composable("profile") {
-                                Surface(
-                                    modifier = Modifier.fillMaxSize(),
-                                    color = MaterialTheme.colorScheme.background
-                                ) {
-                                    ProfileScreen(
-                                        userData = firebaseAuthManager.getSignedInUser(),
-                                        onSignOut = {
-                                            lifecycleScope.launch {
-                                                firebaseAuthManager.signOut()
-                                                Toast.makeText(
-                                                    applicationContext,
-                                                    "Signed Out",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-
-                                                navController.navigate("auth") {
-                                                    popUpTo("main") {
-                                                        inclusive = true
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        onNavigateToFinderUI = {
-                                            navController.navigate("missing_persons")
-                                        }
-                                    )
-                                }
-                            }
-
                             composable("missing_persons") {
                                 val missingPersons by remember {
                                     mutableStateOf(listOf<MissingPerson>())
@@ -415,19 +384,8 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable("map") {
-                                val viewModel = hiltViewModel<FinderViewModel>()
+                                val viewModel = it.sharedViewModel<FinderViewModel>(navController)
                                 val dialogQueue = viewModel.visiblePermissionDialogQueue
-
-                                /*val coarseLocationPermissionResultLauncher =
-                                    rememberLauncherForActivityResult(
-                                        contract = ActivityResultContracts.RequestPermission(),
-                                        onResult = { isGranted ->
-                                            viewModel.onPermissionResult(
-                                                permission = Manifest.permission.ACCESS_COARSE_LOCATION,
-                                                isGranted = isGranted
-                                            )
-                                        }
-                                    )*/
 
                                 val multiplePermissionResultLauncher =
                                     rememberLauncherForActivityResult(
@@ -451,26 +409,6 @@ class MainActivity : ComponentActivity() {
                                     mapState = viewModel.mapState,
                                     onEvent = viewModel::onEvent
                                 )
-
-                                /*Column(
-                                    modifier = Modifier.fillMaxSize(),
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Button(onClick = {
-                                        coarseLocationPermissionResultLauncher.launch(
-                                            Manifest.permission.ACCESS_COARSE_LOCATION
-                                        )
-                                    }) {
-                                        Text(text = "Request one permission")
-                                    }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    Button(onClick = {
-                                        multiplePermissionResultLauncher.launch(permissionsToRequest)
-                                    }) {
-                                        Text(text = "Request multiple permissions")
-                                    }
-                                }*/
 
                                 dialogQueue
                                     .reversed()
@@ -498,6 +436,8 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable("service_test") {
+                                val viewModel = it.sharedViewModel<FinderViewModel>(navController)
+
                                 Column(
                                     modifier = Modifier.fillMaxSize(),
                                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -507,9 +447,9 @@ class MainActivity : ComponentActivity() {
                                         Intent(
                                             applicationContext,
                                             NavigationService::class.java
-                                        ).also {
-                                            it.action = NavigationService.Actions.START.toString()
-                                            startService(it)
+                                        ).also { intent ->
+                                            intent.action = NavigationService.Actions.START.toString()
+                                            startService(intent)
                                         }
                                     }) {
                                         Text("Start service")
@@ -518,18 +458,47 @@ class MainActivity : ComponentActivity() {
                                         Intent(
                                             applicationContext,
                                             NavigationService::class.java
-                                        ).also {
-                                            it.action = NavigationService.Actions.STOP.toString()
-                                            startService(it)
+                                        ).also {intent ->
+                                            intent.action = NavigationService.Actions.STOP.toString()
+                                            startService(intent)
                                         }
                                     }) {
                                         Text("Stop service")
                                     }
                                 }
                             }
-
-
                         }
+
+                        composable(Screen.Profile.route) {
+                            Surface(
+                                modifier = Modifier.fillMaxSize(),
+                                color = MaterialTheme.colorScheme.background
+                            ) {
+                                ProfileScreen(
+                                    userData = firebaseAuthManager.getSignedInUser(),
+                                    onSignOut = {
+                                        lifecycleScope.launch {
+                                            firebaseAuthManager.signOut()
+                                            Toast.makeText(
+                                                applicationContext,
+                                                "Signed Out",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+
+                                            navController.navigate(Screen.Auth.route) {
+                                                popUpTo(Screen.Profile.route) {
+                                                    inclusive = true
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onNavigateToFinderUI = {
+                                        navController.navigate(Screen.Home.route)
+                                    }
+                                )
+                            }
+                        }
+
                         navigation(
                             route = "weather",
                             startDestination = "weather_screen"

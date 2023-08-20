@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.easysouls.tracetrail.domain.location.LocationTracker
+import dev.easysouls.tracetrail.domain.location.LocationClient
 import dev.easysouls.tracetrail.domain.util.Resource
 import dev.easysouls.tracetrail.domain.weather.repository.WeatherRepository
 import kotlinx.coroutines.launch
@@ -15,7 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
     private val repository: WeatherRepository,
-    private val locationTracker: LocationTracker
+    private val locationClient: LocationClient
 ): ViewModel() {
 
     var state by mutableStateOf(WeatherState())
@@ -27,7 +27,7 @@ class WeatherViewModel @Inject constructor(
                 isLoading = true,
                 error = null
             )
-            locationTracker.getLastLocation()?.let { location ->
+            locationClient.getLastLocation()?.let { location ->
                 when (val result = repository.getWeatherData(location.latitude, location.longitude)) {
                     is Resource.Success -> {
                         state = state.copy(
@@ -44,7 +44,7 @@ class WeatherViewModel @Inject constructor(
                         )
                     }
                 }
-            } ?: kotlin.run {
+            } ?: run {
                 state = state.copy(
                     isLoading = false,
                     error = "Couldn't retrieve location. Make sure to grant permission and enable gps."

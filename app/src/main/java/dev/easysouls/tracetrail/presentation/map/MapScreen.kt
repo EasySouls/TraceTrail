@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
@@ -32,21 +33,25 @@ fun MapScreen(
         MapUiSettings(zoomControlsEnabled = false)
     }
 
+    // This is the default location for now, but later on i would like to
+    // cache the last location that was available
     val budapest = LatLng(47.526642, 19.046394)
-    val cameraPositionState = rememberCameraPositionState {
-        position = if (currentLocationState != null) {
-            CameraPosition.fromLatLngZoom(currentLocationState, 10f)
-        } else {
-            CameraPosition.fromLatLngZoom(budapest, 10f)
-        }
-    }
+    val cameraPositionState = CameraPositionState(
+        CameraPosition.fromLatLngZoom(
+            LatLng(
+                currentLocationState?.latitude ?: 20.0, currentLocationState?.longitude ?: 15.0
+            ), 14f
+        )
+    )
+
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     onEvent(MapEvent.ToggleMapStyle)
                 },
-                ) {
+            ) {
                 Icon(
                     imageVector = if (mapState.isStyledMap) {
                         Icons.Default.KeyboardArrowRight
@@ -60,6 +65,7 @@ fun MapScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(values),
+            //cameraPositionState = cameraPositionState,
             cameraPositionState = cameraPositionState,
             properties = mapState.properties,
             uiSettings = uiSettings,

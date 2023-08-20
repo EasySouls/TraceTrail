@@ -16,7 +16,7 @@ class NavigationApp: Application() {
         val channel = NotificationChannel(
             "navigation_channel",
             "Navigation Notifications",
-            NotificationManager.IMPORTANCE_HIGH
+            NotificationManager.IMPORTANCE_LOW
         )
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
